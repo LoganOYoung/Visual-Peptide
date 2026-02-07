@@ -1,0 +1,153 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { peptides, getPeptideByPdbId } from "@/lib/peptides";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { PdbOpener } from "@/components/PdbOpener";
+import { PdbViewerInSite } from "@/components/PdbViewerInSite";
+
+export function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: { pdb?: string };
+}): Metadata {
+  const pdb = searchParams?.pdb?.trim().toUpperCase();
+  if (pdb) {
+    return {
+      title: `PDB ${pdb} — 3D Structure`,
+      description: `View PDB structure ${pdb} in 3D. Peptide and protein molecular viewer.`,
+    };
+  }
+  return {
+    title: "3D Structure",
+    description: "View peptide structures in 3D. In-site viewer (no external embed).",
+  };
+}
+
+/** Default structure shown when no ?pdb= is in the URL (demo). */
+const DEFAULT_DEMO_PDB = "6XBM";
+const DEFAULT_DEMO_LABEL = "Semaglutide (GLP-1)";
+
+/** Extra PDB IDs for testing 3D viewer (small/fast or peptide-related). */
+const TEST_PDB_IDS: { id: string; label: string }[] = [
+  { id: "6XBM", label: "Semaglutide (GLP-1)" },
+  { id: "1CRN", label: "Crambin (small protein)" },
+  { id: "1UBQ", label: "Ubiquitin" },
+  { id: "4N8T", label: "Membrane protein" },
+  { id: "1JPY", label: "Protein (JPY)" },
+  { id: "2LL5", label: "Small peptide" },
+  { id: "1MO8", label: "Oxidoreductase" },
+  { id: "2EJ0", label: "Protein (2EJ0)" },
+  { id: "4DLN", label: "Protein (4DLN)" },
+  { id: "5IRE", label: "Insulin receptor" },
+  { id: "1D4P", label: "Small peptide" },
+  { id: "7F9W", label: "GLP-1 receptor" },
+];
+
+export default function StructurePage({
+  searchParams,
+}: {
+  searchParams?: { pdb?: string };
+}) {
+  const initialPdb = searchParams?.pdb?.trim() ?? "";
+  const withPdb = peptides.filter((p) => p.pdbId);
+  const peptideForPdb = initialPdb ? getPeptideByPdbId(initialPdb) : undefined;
+  const isDemo = !initialPdb;
+  const displayPdb = initialPdb || DEFAULT_DEMO_PDB;
+
+  const quickLoadIds = [
+    ...withPdb.map((p) => ({ id: p.pdbId!, label: p.name })),
+    ...TEST_PDB_IDS.filter((t) => !withPdb.some((p) => p.pdbId === t.id)),
+  ];
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-12">
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} />
+      <h1 className="mt-2 text-3xl font-bold text-slate-900">3D Structure Viewer</h1>
+      <p className="mt-2 text-slate-600">
+        View peptide and protein structures from the PDB. Drag to rotate, scroll to zoom.
+      </p>
+      <p className="mt-1 text-sm text-slate-500">
+        <Link href="/structure/demo" className="link-inline">3D reaction demo</Link>
+        {" · "}
+        <Link href="/peptides" className="link-inline">Peptide Library</Link>
+        {" · "}
+        <Link href="/tools/calculator" className="link-inline">Calculator</Link>
+      </p>
+
+      <div className="card mt-8">
+        <h2 className="text-lg font-semibold text-slate-900">Load structure by PDB ID</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Enter a PDB ID to load the structure in the viewer below (in-site only, no external page).
+        </p>
+        <p className="mt-1 text-xs text-slate-500">Or pick one from Quick load below.</p>
+        <PdbOpener initialPdb={initialPdb} />
+      </div>
+
+      <div className="mt-8">
+        {isDemo && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
+            <span className="rounded-none bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700">Demo</span>
+            <span className="text-slate-700">
+              Showing <strong className="text-slate-900">{DEFAULT_DEMO_LABEL}</strong> (PDB {DEFAULT_DEMO_PDB}).
+            </span>
+          </div>
+        )}
+        {!isDemo && peptideForPdb && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
+            <span className="text-slate-700">This structure is <strong className="text-slate-900">{peptideForPdb.name}</strong></span>
+            <Link href={`/tools/calculator?peptide=${peptideForPdb.slug}`} className="btn-primary text-sm">
+              Open calculator
+            </Link>
+            <Link href={`/peptides/${peptideForPdb.slug}`} className="link-inline text-sm">
+              Peptide detail →
+            </Link>
+          </div>
+        )}
+        {!isDemo && initialPdb && !peptideForPdb && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-slate-200 bg-slate-50 px-4 py-3">
+            <span className="text-slate-700">PDB <strong className="text-slate-900">{initialPdb}</strong></span>
+            <Link href={`https://www.rcsb.org/3d-view/${initialPdb}`} target="_blank" rel="noopener noreferrer" className="link-inline text-sm">
+              Open in RCSB →
+            </Link>
+          </div>
+        )}
+        <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>
+          <PdbViewerInSite pdbId={displayPdb} minHeight={500} />
+        </Suspense>
+        <p className="mt-4 text-sm text-slate-600">
+          Copy or share this link to open the same structure (PDB {displayPdb}) directly:{" "}
+          <Link href={`/structure?pdb=${displayPdb}`} className="link-inline font-medium">
+            /structure?pdb={displayPdb}
+          </Link>
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
+          To load another structure, use the PDB input at the top or the Quick load list below.
+        </p>
+      </div>
+
+      <div className="card mt-8">
+        <h2 className="text-lg font-semibold text-slate-900">Quick load</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Click a PDB to load in the viewer. Small structures load faster.
+        </p>
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {quickLoadIds.map(({ id, label }) => (
+            <li key={id}>
+              <Link
+                href={`/structure?pdb=${id}`}
+                className="inline-block rounded-none border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition hover:border-teal-400 hover:bg-teal-50 hover:text-slate-900"
+              >
+                {id} — {label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="mt-6 text-sm text-slate-500">
+        Data from RCSB PDB. For research and education. Not all peptides have a public 3D structure; small peptides may be under different IDs or in other databases.
+      </p>
+    </div>
+  );
+}

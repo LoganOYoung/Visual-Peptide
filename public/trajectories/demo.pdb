@@ -1,0 +1,12 @@
+MODEL 1
+ATOM      1  N   ALA A   1       5.000   0.000   0.000  1.00  0.00           N
+ATOM      2  CA  ALA A   1       6.458   0.000   0.000  1.00  0.00           C
+ATOM      3  C   ALA A   1       7.224   1.232   0.000  1.00  0.00           C
+ATOM      4  O   ALA A   1       8.449   1.170   0.000  1.00  0.00           O
+ENDMDL
+MODEL 2
+ATOM      1  N   ALA A   1       5.200   0.300   0.100  1.00  0.00           N
+ATOM      2  CA  ALA A   1       6.658   0.280   0.090  1.00  0.00           C
+ATOM      3  C   ALA A   1       7.424   1.512   0.080  1.00  0.00           C
+ATOM      4  O   ALA A   1       8.649   1.450   0.070  1.00  0.00           O
+ENDMDL
