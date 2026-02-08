@@ -43,16 +43,33 @@ export const metadata: Metadata = {
     images: ["/opengraph-image"],
   },
   robots: { index: true, follow: true },
-  alternates: { canonical: SITE_URL },
 };
 
-const jsonLd = {
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#0f172a",
+};
+
+const jsonLdWebSite = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Visual Peptide",
   url: SITE_URL,
   description:
     "Research-grade peptide calculators, 3D structure viewer, and purity verification. Reconstitution and dosing for BPC-157, Semaglutide, Tirzepatide and more.",
+  publisher: { "@type": "Organization" as const, name: "Visual Peptide", url: SITE_URL },
+};
+
+const jsonLdOrganization = {
+  "@context": "https://schema.org",
+  "@type": "Organization" as const,
+  name: "Visual Peptide",
+  url: SITE_URL,
+  description: "Research-grade peptide calculators and reference. Reconstitution, dosing, 3D structure, purity verification.",
+  logo: `${SITE_URL}/logo.svg`,
 };
 
 export default function RootLayout({
@@ -65,7 +82,11 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 text-slate-900 antialiased">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
         />
         <Header />
         <main className="flex-1">{children}</main>

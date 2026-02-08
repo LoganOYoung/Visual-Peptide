@@ -1,16 +1,21 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+
+const canonical = getCanonicalUrl("/about");
 
 export const metadata: Metadata = {
   title: "About",
   description: "What Visual Peptide is: calculators and reference for research peptides. Research and education only; we don't sell peptides or give medical advice. Privacy and disclaimer.",
+  alternates: { canonical },
+  openGraph: { url: canonical },
 };
 
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
-      <Breadcrumbs items={[{ label: "Help", href: "/guide" }, { label: "About" }]} />
+      <Breadcrumbs items={[{ label: "Help", href: "/guide" }, { label: "About" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">About</h1>
       <p className="mt-2 text-slate-600">
         What this site is, how we operate, and the legal bits.

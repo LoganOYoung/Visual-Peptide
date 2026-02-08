@@ -31,7 +31,7 @@ export function PeptideLibrary() {
           <button
             type="button"
             onClick={() => setCategory("all")}
-            className={`rounded-none px-3 py-2 text-sm font-medium transition ${
+            className={`min-h-[44px] rounded-none px-3 py-2 text-sm font-medium transition ${
               category === "all"
                 ? "bg-teal-500 text-white"
                 : "bg-slate-200 text-slate-700 hover:bg-slate-300"
@@ -44,7 +44,7 @@ export function PeptideLibrary() {
               key={c.id}
               type="button"
               onClick={() => setCategory(c.id)}
-              className={`rounded-none px-3 py-2 text-sm font-medium transition ${
+              className={`min-h-[44px] rounded-none px-3 py-2 text-sm font-medium transition ${
                 category === c.id
                   ? "bg-teal-500 text-white"
                   : "bg-slate-200 text-slate-700 hover:bg-slate-300"
@@ -100,7 +100,7 @@ export function PeptideLibrary() {
                       e.stopPropagation();
                       router.push(`/peptides/compare?compare=${encodeURIComponent(p.slug)}`);
                     }}
-                    className="text-left text-teal-600 hover:underline"
+                    className="min-h-[44px] min-w-[44px] text-left text-teal-600 hover:underline inline-flex items-center"
                   >
                     Compare
                   </button>

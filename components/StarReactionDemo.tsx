@@ -96,14 +96,14 @@ export function StarReactionDemo() {
               <button
                 type="button"
                 onClick={handleLabFullscreen}
-                className="rounded-none border border-slate-600 bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-600"
+                className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-600"
               >
                 Fullscreen
               </button>
               <button
                 type="button"
                 onClick={handleCloseLab}
-                className="rounded-none border border-slate-600 bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-600"
+                className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-600"
               >
                 Exit
               </button>

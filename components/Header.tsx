@@ -38,7 +38,7 @@ export function Header() {
   }, [clearCloseTimer]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur pt-[env(safe-area-inset-top,0)]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-semibold text-slate-900">
           <img src="/logo.svg" alt="" className="h-8 w-8 shrink-0" width={32} height={32} />
@@ -165,7 +165,7 @@ export function Header() {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={() => setMobileOpen(false)}
-                              className="flex min-h-[40px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
+                              className="flex min-h-[44px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
                             >
                               {s.label}
                             </a>
@@ -173,7 +173,7 @@ export function Header() {
                             <Link
                               href={s.href}
                               onClick={() => setMobileOpen(false)}
-                              className="flex min-h-[40px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
+                              className="flex min-h-[44px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
                             >
                               {s.label}
                             </Link>

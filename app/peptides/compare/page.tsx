@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { peptides, PEPTIDE_CATEGORIES, type Peptide } from "@/lib/peptides";
+import { getBaseUrl } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 const MAX_SLOTS = 3;
@@ -116,6 +117,7 @@ function PeptideCompareContent() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
       <Breadcrumbs
         items={[{ label: "Peptides", href: "/peptides" }, { label: "Compare" }]}
+        baseUrl={getBaseUrl()}
       />
       <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">Compare Peptides</h1>
       <p className="mt-2 text-slate-600">
@@ -318,7 +320,7 @@ export default function PeptideComparePage() {
   return (
     <Suspense fallback={
       <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
-        <Breadcrumbs items={[{ label: "Peptides", href: "/peptides" }, { label: "Compare" }]} />
+        <Breadcrumbs items={[{ label: "Peptides", href: "/peptides" }, { label: "Compare" }]} baseUrl={getBaseUrl()} />
         <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">Compare Peptides</h1>
         <p className="mt-4 text-slate-500">Loading comparison…</p>
       </div>

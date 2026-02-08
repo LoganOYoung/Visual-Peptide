@@ -5,6 +5,9 @@ import { peptides, getPeptideByPdbId } from "@/lib/peptides";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
 import { PdbViewerInSite } from "@/components/PdbViewerInSite";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
+
+const structureCanonical = getCanonicalUrl("/structure");
 
 export function generateMetadata({
   searchParams,
@@ -16,11 +19,15 @@ export function generateMetadata({
     return {
       title: `PDB ${pdb} — 3D Structure`,
       description: `View PDB structure ${pdb} in 3D. Peptide and protein molecular viewer.`,
+      alternates: { canonical: structureCanonical },
+      openGraph: { url: structureCanonical },
     };
   }
   return {
     title: "3D Structure",
     description: "View peptide structures in 3D. In-site viewer (no external embed).",
+    alternates: { canonical: structureCanonical },
+    openGraph: { url: structureCanonical },
   };
 }
 
@@ -62,7 +69,7 @@ export default function StructurePage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} />
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">3D Structure Viewer</h1>
       <p className="mt-2 text-slate-600">
         View peptide and protein structures from the PDB. Drag to rotate, scroll to zoom.

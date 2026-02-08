@@ -384,7 +384,7 @@ export function TrajectoryViewer({
               <button
                 type="button"
                 onClick={handlePlayPause}
-                className="rounded-none border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 {playing ? "Pause" : "Play"}
               </button>
@@ -394,7 +394,7 @@ export function TrajectoryViewer({
               <select
                 value={speed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
-                className="rounded-none border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 focus:border-teal-500 focus:outline-none"
+                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:outline-none"
                 title="Playback speed"
               >
                 <option value={0.5}>0.5×</option>
@@ -409,7 +409,7 @@ export function TrajectoryViewer({
               <button
                 type="button"
                 onClick={handleFullscreen}
-                className="rounded-none border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                 title="Fullscreen"
               >
                 {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
@@ -417,7 +417,7 @@ export function TrajectoryViewer({
               <button
                 type="button"
                 onClick={handleScreenshot}
-                className="rounded-none border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                 title="Download screenshot"
               >
                 Screenshot

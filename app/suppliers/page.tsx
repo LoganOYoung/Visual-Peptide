@@ -2,16 +2,21 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { supplierList } from "@/lib/suppliers";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
+
+const canonical = getCanonicalUrl("/suppliers");
 
 export const metadata: Metadata = {
   title: "Suppliers",
   description: "Third-party tested and community-vetted peptide suppliers. Verify reports first.",
+  alternates: { canonical },
+  openGraph: { url: canonical },
 };
 
 export default function SuppliersPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Suppliers" }]} />
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Suppliers" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Suppliers & Sourcing</h1>
       <p className="mt-2 text-slate-600">
         We aim to list suppliers that have been third-party tested (e.g. Janoshik) or are otherwise vetted by the research community. Listing is for information only; always verify purity and compliance yourself.

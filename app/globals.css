@@ -24,8 +24,9 @@ body {
   background-color: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 @layer components {
@@ -46,12 +47,15 @@ body {
   }
 }
 
-/* Touch: remove tap highlight, keep focus ring */
+/* Touch: remove tap highlight, faster tap (no 300ms delay), keep focus ring */
 @media (hover: none) {
   .btn-primary,
   .btn-secondary,
-  a[href] {
+  .input,
+  a[href],
+  button {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 }
 

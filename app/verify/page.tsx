@@ -3,16 +3,21 @@ import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ReportVerifier } from "@/components/ReportVerifier";
 import { PurityPulse } from "@/components/PurityPulse";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
+
+const canonical = getCanonicalUrl("/verify");
 
 export const metadata: Metadata = {
   title: "Purity & Verify",
   description: "Third-party testing (Janoshik). Verify batch reports by task ID. Links to public database.",
+  alternates: { canonical },
+  openGraph: { url: canonical },
 };
 
 export default function VerifyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Purity & Verify" }]} />
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Purity & Verify" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Purity & Verification</h1>
       <p className="mt-2 text-slate-600">
         Third-party testing is the standard for verifying peptide purity and identity. We recommend using an independent lab before sourcing.

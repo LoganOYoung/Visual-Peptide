@@ -1,17 +1,22 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { StabilityHelper } from "@/components/StabilityHelper";
+
+const canonical = getCanonicalUrl("/guide");
 
 export const metadata: Metadata = {
   title: "Reconstitution Guide",
   description: "Steps for reconstituting lyophilized peptides, units (mcg, mg, mL), concentration and dose, stability, and which tools to use when.",
+  alternates: { canonical },
+  openGraph: { url: canonical },
 };
 
 export default function GuidePage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
-      <Breadcrumbs items={[{ label: "Help", href: "/guide" }, { label: "Reconstitution Guide" }]} />
+      <Breadcrumbs items={[{ label: "Help", href: "/guide" }, { label: "Reconstitution Guide" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">Reconstitution & Dosing Guide</h1>
       <p className="mt-2 text-slate-600">
         Basic steps for reconstituting lyophilized peptides and calculating doses. For research use only.

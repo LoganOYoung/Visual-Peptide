@@ -1,8 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Not Found",
-  robots: { index: false as const, follow: true as const },
+export const metadata: Metadata = {
+  title: "Page Not Found",
+  description: "The page you're looking for doesn't exist. Return to Visual Peptide home or try Tools, Peptides, or Guide.",
+  robots: { index: false, follow: true },
 };
 
 const WORKING_LINKS = [

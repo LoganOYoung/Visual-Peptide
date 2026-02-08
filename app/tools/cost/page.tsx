@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { costPerDose } from "@/lib/calc";
+import { getBaseUrl } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default function CostPage() {
@@ -18,7 +19,7 @@ export default function CostPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Cost per Dose" }]} />
+      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Cost per Dose" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Cost per Dose</h1>
       <p className="mt-2 text-slate-600">
         Enter vial price and size, and your dose, to get cost per injection.

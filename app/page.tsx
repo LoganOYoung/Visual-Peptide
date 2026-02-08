@@ -4,13 +4,17 @@ import type { Metadata } from "next";
 import { QuickSearch } from "@/components/QuickSearch";
 import { PurityPulse } from "@/components/PurityPulse";
 import { HeroTrajectoryView } from "@/components/HeroTrajectoryView";
-import { getBaseUrl } from "@/lib/site";
+import { getCanonicalUrl } from "@/lib/site";
+
+const canonical = getCanonicalUrl("/");
 
 export const metadata: Metadata = {
   title: "Visual Peptide — Precision Without the Math",
   description:
     "Research-grade peptide calculators, visual syringe planner, 3D structure viewer, and purity verification. Verify before you source.",
-  alternates: { canonical: getBaseUrl() },
+  alternates: { canonical },
+  openGraph: { url: canonical },
+  twitter: { card: "summary_large_image" },
 };
 
 const TOOL_CARDS = [

@@ -12,6 +12,7 @@ import {
   volumeToDose,
 } from "@/lib/calc";
 import { getPeptideBySlug } from "@/lib/peptides";
+import { getBaseUrl } from "@/lib/site";
 
 const SYRINGE_OPTIONS: { value: "0.3" | "0.5" | "1"; label: string }[] = [
   { value: "0.3", label: "0.3 mL (30 units)" },
@@ -90,7 +91,7 @@ export function CalculatorContent() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Recon & Dosing" }]} />
+      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Recon & Dosing" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Reconstitution & Dosing Calculator</h1>
       <p className="mt-2 text-slate-600">
         Enter peptide amount and diluent (e.g. bacteriostatic water) to get concentration, then calculate dose per injection.
@@ -127,7 +128,7 @@ export function CalculatorContent() {
             <button
               type="button"
               onClick={() => setMode("by-volume")}
-              className={`rounded-none px-3 py-2 text-sm font-medium ${
+              className={`min-h-[44px] rounded-none px-3 py-2 text-sm font-medium ${
                 mode === "by-volume"
                   ? "bg-teal-500 text-white"
                   : "bg-slate-200 text-slate-700 hover:bg-slate-300"
@@ -138,7 +139,7 @@ export function CalculatorContent() {
             <button
               type="button"
               onClick={() => setMode("by-concentration")}
-              className={`rounded-none px-3 py-2 text-sm font-medium ${
+              className={`min-h-[44px] rounded-none px-3 py-2 text-sm font-medium ${
                 mode === "by-concentration"
                   ? "bg-teal-500 text-white"
                   : "bg-slate-200 text-slate-700 hover:bg-slate-300"
@@ -202,7 +203,7 @@ export function CalculatorContent() {
                 key={opt.value}
                 type="button"
                 onClick={() => setSyringeMl(opt.value)}
-                className={`rounded-none px-3 py-2 text-sm font-medium ${
+                className={`min-h-[44px] rounded-none px-3 py-2 text-sm font-medium ${
                   syringeMl === opt.value ? "bg-teal-500 text-white" : "bg-slate-200 text-slate-700 hover:bg-slate-300"
                 }`}
               >

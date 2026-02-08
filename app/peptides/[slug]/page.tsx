@@ -6,6 +6,7 @@ import { getPeptideBySlug, getAllSlugs, PEPTIDE_CATEGORIES } from "@/lib/peptide
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { MiniReconCalc } from "@/components/MiniReconCalc";
 import { PdbViewerInSite } from "@/components/PdbViewerInSite";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -15,9 +16,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const peptide = getPeptideBySlug(slug);
   if (!peptide) return { title: "Not Found" };
+  const canonical = getCanonicalUrl(`/peptides/${slug}`);
   return {
     title: peptide.name,
     description: peptide.description,
+    alternates: { canonical },
+    openGraph: { url: canonical },
   };
 }
 
@@ -42,6 +46,7 @@ export default async function PeptideDetailPage({
     <div className="mx-auto max-w-3xl px-4 py-12">
       <Breadcrumbs
         items={[{ label: "Peptides", href: "/peptides" }, { label: peptide.name }]}
+        baseUrl={getBaseUrl()}
       />
       <header className="mt-4">
         <div className="flex flex-wrap items-start justify-between gap-4">

@@ -3,7 +3,7 @@ import { navLinks } from "@/lib/nav";
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-slate-200 bg-white">
+    <footer className="mt-auto border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom,0)]">
       <div className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2 font-semibold text-slate-900">

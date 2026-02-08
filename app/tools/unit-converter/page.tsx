@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { getBaseUrl } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default function UnitConverterPage() {
@@ -16,7 +17,7 @@ export default function UnitConverterPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Unit Converter" }]} />
+      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Unit Converter" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Unit Converter</h1>
       <p className="mt-2 text-slate-600">
         mcg ↔ mg. (1 mg = 1000 mcg.)

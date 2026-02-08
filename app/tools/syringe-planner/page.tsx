@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { doseToVolumeWithSyringe } from "@/lib/calc";
+import { getBaseUrl } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { VisualSyringe } from "@/components/VisualSyringe";
 
@@ -29,7 +30,7 @@ export default function SyringePlannerPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Syringe Planner" }]} />
+      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Syringe Planner" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Visual Syringe Planner</h1>
       <p className="mt-2 text-slate-600">
         See exactly where to draw. Enter your reconstitution and dose — the syringe shows the fill level.
@@ -90,7 +91,7 @@ export default function SyringePlannerPage() {
                   key={opt.value}
                   type="button"
                   onClick={() => setSyringeMl(opt.value)}
-                  className={`rounded-none px-3 py-2 text-sm font-medium transition ${
+                  className={`min-h-[44px] rounded-none px-3 py-2 text-sm font-medium transition ${
                     syringeMl === opt.value
                       ? "bg-teal-500 text-white"
                       : "bg-slate-200 text-slate-700 hover:bg-slate-300"

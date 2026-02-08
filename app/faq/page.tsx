@@ -1,10 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
+
+const canonical = getCanonicalUrl("/faq");
 
 export const metadata: Metadata = {
   title: "FAQ",
   description: "Common questions about reconstitution, storage, verification, tools, and peptide reference. Quick answers with links to Guide and tools.",
+  alternates: { canonical },
+  openGraph: { url: canonical },
 };
 
 const FAQ_GROUPS: {
@@ -185,10 +190,47 @@ const FAQ_GROUPS: {
   },
 ];
 
+/** Plain-text answers for FAQPage JSON-LD (same order as FAQ_GROUPS items). */
+const FAQ_PLAIN_ANSWERS: string[] = [
+  "Bacteriostatic water (BAC water) or sterile diluent per your protocol. Do not use plain tap or distilled water. Check your lab or product instructions.",
+  "Many peptides are stable 2–8 °C for about 30 days after reconstitution; stability varies by peptide and formulation. Follow your product leaflet or protocol. Use the stability helper on the Guide (Stability) to get a suggested use-by date.",
+  "Use sterile technique: clean work surface, avoid touching the rubber stopper or needle. Let vial and diluent reach room temperature if refrigerated. Follow the reconstitution steps in our Guide and your product or lab protocol.",
+  "Third-party labs such as Janoshik offer HPLC purity, mass spec identity, and potency testing. See our Purity & Verify page for Janoshik and the public results database. Use the verification helper there to open the official page with your task ID.",
+  "Every report has a task ID. Go to Janoshik's site and use Verify report (or the link from our verification helper), enter the task ID, and confirm the content matches your report. Do not trust reports that cannot be verified on the lab's official site.",
+  "Purity (e.g. HPLC) is the percentage of the target peptide in the sample. Potency is the actual amount of active peptide per vial (e.g. mg per vial). Both matter: high purity with low potency means less active compound than labeled.",
+  "1 mg = 1000 mcg. Divide mcg by 1000 to get mg. Use our Recon & Dosing Calculator or Unit Converter for dose and concentration.",
+  "The Recon & Dosing Calculator lets you choose syringe size (0.3 mL / 30 units, 0.5 mL / 50 units, or 1 mL / 100 units) and shows the volume to draw and units for your syringe.",
+  "Use the Syringe Planner: enter your recon parameters and dose, pick your syringe type, and you get a visual showing the fill line so you know exactly where to draw to.",
+  "Use the Vial & Cycle tool: enter vial size (mg), dose per injection (mcg), and injections per day to see how many days one vial lasts, then enter target days to get the number of vials needed.",
+  "Use Cost per Dose: enter price per vial, mg per vial, and your dose (mcg) to get the cost per injection. Useful for comparing suppliers or doses.",
+  "Our Peptide Library lists peptides by category (Metabolic, Repair & Healing, Cognitive, etc.). Each peptide page has typical dose (mcg), frequency, reconstitution notes, and a link to the calculator for your vial.",
+  "Use Compare: select up to 3 peptides to see dose, frequency, description, reconstitution, and category side by side. You can also start from a peptide's Library card with Compare.",
+  "All content is for research and education only. Doses and protocols cited are common research references, not clinical recommendations. Clinical use follows different regulations and protocols — we do not provide medical advice. See About for full disclaimer.",
+  "No. We do not sell peptides, run tests, or give medical advice. We only provide calculators, peptide reference, verification links (e.g. Janoshik), and educational content. See About for details.",
+];
+
+function buildFaqJsonLd() {
+  const mainEntity: { "@type": string; name: string; acceptedAnswer: { "@type": string; text: string } }[] = [];
+  let idx = 0;
+  for (const group of FAQ_GROUPS) {
+    for (const item of group.items) {
+      mainEntity.push({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: FAQ_PLAIN_ANSWERS[idx] ?? item.q },
+      });
+      idx += 1;
+    }
+  }
+  return { "@context": "https://schema.org", "@type": "FAQPage", mainEntity };
+}
+
 export default function FAQPage() {
+  const faqJsonLd = buildFaqJsonLd();
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
-      <Breadcrumbs items={[{ label: "Help", href: "/guide" }, { label: "FAQ" }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <Breadcrumbs items={[{ label: "Help", href: "/guide" }, { label: "FAQ" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">FAQ</h1>
       <p className="mt-2 text-slate-600">
         Quick answers to common questions. New to peptides? Start with the{" "}

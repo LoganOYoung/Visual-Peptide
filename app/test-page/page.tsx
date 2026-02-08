@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Test",
+  description: "Next.js response test page. Not for production indexing.",
+  robots: { index: false, follow: false },
+};
+
 export default function TestPage() {
   return (
     <div className="p-8 text-white">

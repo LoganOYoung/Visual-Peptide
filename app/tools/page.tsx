@@ -2,13 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { toolsSubLinks } from "@/lib/nav";
-import { getBaseUrl } from "@/lib/site";
+import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Tools",
-  description: "Recon & dosing calculator, vial & cycle, unit converter, cost per dose.",
-  alternates: { canonical: `${getBaseUrl()}/tools` },
-};
+const canonical = getCanonicalUrl("/tools");
+const base = getBaseUrl();
 
 const TOOL_CARDS: { href: string; label: string; desc: string; icon: string }[] = [
   { href: "/tools/calculator", label: "Recon & Dosing", desc: "Concentration, diluent volume, dose per injection, syringe units (0.3/0.5/1 mL).", icon: "🧮" },
@@ -18,10 +15,33 @@ const TOOL_CARDS: { href: string; label: string; desc: string; icon: string }[] 
   { href: "/tools/cost", label: "Cost per Dose", desc: "Price per vial, mg per vial, dose (mcg) → cost per injection.", icon: "💰" },
 ];
 
+const TOOLS_ITEMLIST_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Peptide research tools",
+  description: "Reconstitution, dosing, syringe planner, unit converter, cost per dose.",
+  numberOfItems: TOOL_CARDS.length,
+  itemListElement: TOOL_CARDS.map((card, i) => ({
+    "@type": "ListItem" as const,
+    position: i + 1,
+    name: card.label,
+    url: `${base}${card.href}`,
+    description: card.desc,
+  })),
+};
+
+export const metadata: Metadata = {
+  title: "Tools",
+  description: "Recon & dosing calculator, syringe planner, vial & cycle, unit converter, cost per dose. Research peptide calculators.",
+  alternates: { canonical },
+  openGraph: { url: canonical },
+};
+
 export default function ToolsIndexPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Tools" }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(TOOLS_ITEMLIST_JSONLD) }} />
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Tools" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Tools</h1>
       <p className="mt-2 text-slate-600">
         Calculators and utilities for reconstitution, dosing, cycle planning, units, and cost.

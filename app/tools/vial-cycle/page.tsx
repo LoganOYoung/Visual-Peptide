@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { vialDurationDays, vialsNeededForDays } from "@/lib/calc";
+import { getBaseUrl } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export default function VialCyclePage() {
@@ -27,7 +28,7 @@ export default function VialCyclePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Vial & Cycle" }]} />
+      <Breadcrumbs items={[{ label: "Tools", href: "/tools" }, { label: "Vial & Cycle" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Vial & Cycle Calculator</h1>
       <p className="mt-2 text-slate-600">
         How many days one vial lasts, and how many vials you need for a target period.
