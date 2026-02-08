@@ -31,7 +31,7 @@ export const trajectoryDemos: TrajectoryDemoSpec[] = [
     id: "multi-model-file",
     title: "Multi-MODEL PDB file (from public/)",
     description:
-      "Single file with multiple MODEL … ENDMDL blocks, e.g. from MD trajectory or NMR. Place your file in public/trajectories/ and set pdbUrl.",
+      "Single file with multiple MODEL … ENDMDL blocks (e.g. from MD or NMR). To use your own: put the file in public/trajectories/ and use the loader above with By file URL.",
     pdbUrl: "/trajectories/demo.pdb",
   },
 ];

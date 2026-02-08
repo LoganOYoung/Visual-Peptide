@@ -156,6 +156,7 @@ export function PdbViewerInSite({
           target="_blank"
           rel="noopener noreferrer"
           className="link-inline text-xs"
+          aria-label="Open structure in RCSB (new tab)"
         >
           Open in RCSB →
         </Link>
@@ -175,7 +176,7 @@ export function PdbViewerInSite({
             style={{ minHeight: `${minHeight}px` }}
           >
             <span>{error}</span>
-            <Link href={src} target="_blank" rel="noopener noreferrer" className="link-inline text-xs">
+            <Link href={src} target="_blank" rel="noopener noreferrer" className="link-inline text-xs" aria-label="Open structure in RCSB (new tab)">
               Open in RCSB instead →
             </Link>
           </div>

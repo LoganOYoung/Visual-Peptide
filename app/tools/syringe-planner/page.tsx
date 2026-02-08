@@ -124,7 +124,7 @@ export default function SyringePlannerPage() {
       <p className="mt-6 text-sm text-slate-500">
         <Link href="/tools/calculator" className="link-inline">Full reconstitution calculator</Link>
         {" · "}
-        <Link href="/guide" className="link-inline">Reconstitution guide</Link>
+        See guide: <Link href="/guide#reconstitution-steps" className="link-inline">Reconstitution steps</Link>
       </p>
     </div>
   );

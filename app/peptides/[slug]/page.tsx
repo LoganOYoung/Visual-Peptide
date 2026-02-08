@@ -149,6 +149,10 @@ export default async function PeptideDetailPage({
         />
       </div>
 
+      <p className="mt-4 text-sm text-slate-600">
+        See guide: <Link href="/guide#concentration-dose" className="link-inline">Concentration & dose</Link>.
+        <span className="ml-2">Verify purity before sourcing: <Link href="/verify" className="link-inline">Purity checker</Link>.</span>
+      </p>
       <div className="mt-6 flex flex-wrap gap-4">
         <Link
           href={`/tools/calculator?peptide=${peptide.slug}`}

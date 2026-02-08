@@ -67,6 +67,9 @@ export default function VialCyclePage() {
       </section>
 
       <p className="mt-6 text-xs text-slate-500">For research use only. Doses and frequency are protocol-dependent.</p>
+      <p className="mt-4 text-sm text-slate-600">
+        See guide: <Link href="/guide#concentration-dose" className="link-inline">Concentration & dose</Link>. For exact volumes: <Link href="/tools/calculator" className="link-inline">Recon & Dosing Calculator</Link>.
+      </p>
     </div>
   );
 }

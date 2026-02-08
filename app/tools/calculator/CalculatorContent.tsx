@@ -95,6 +95,9 @@ export function CalculatorContent() {
       <p className="mt-2 text-slate-600">
         Enter peptide amount and diluent (e.g. bacteriostatic water) to get concentration, then calculate dose per injection.
       </p>
+      <p className="mt-1 text-sm text-slate-500">
+        See guide: <Link href="/guide#concentration-dose" className="link-inline">Concentration & dose</Link>
+      </p>
       {peptide && (
         <p className="mt-1 text-sm text-teal-600">
           Pre-filled for {peptide.name}. <Link href={`/peptides/${peptide.slug}`} className="link-inline">View details</Link>

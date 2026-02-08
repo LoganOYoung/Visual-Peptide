@@ -45,6 +45,9 @@ export default function UnitConverterPage() {
       </section>
 
       <p className="mt-6 text-xs text-slate-500">For peptide dosing, doses are often in mcg; vial content in mg.</p>
+      <p className="mt-4 text-sm text-slate-600">
+        See guide: <Link href="/guide#units" className="link-inline">Units</Link>. For dose and volume: <Link href="/tools/calculator" className="link-inline">Recon & Dosing Calculator</Link>.
+      </p>
     </div>
   );
 }

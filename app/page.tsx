@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { QuickSearch } from "@/components/QuickSearch";
 import { PurityPulse } from "@/components/PurityPulse";
+import { HeroTrajectoryView } from "@/components/HeroTrajectoryView";
 import { getBaseUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -71,52 +73,74 @@ export default function HomePage() {
             backgroundSize: "48px 48px",
           }}
         />
-        <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24">
-          <p className="text-sm font-medium uppercase tracking-widest text-teal-600">
+        <div className="relative mx-auto max-w-6xl px-4 py-12 sm:py-16 md:py-24">
+          <p className="text-xs font-medium uppercase tracking-widest text-teal-600 sm:text-sm">
             Research-grade peptide platform
           </p>
-          <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl">
             Precision without the math
           </h1>
-          <p className="mt-4 max-w-2xl text-lg text-slate-600">
+          <p className="mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
             From 3D structure to syringe draw — calculators, dosing, vial planning, and purity verification in one place.
           </p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-slate-500">
             Research and education only. Not medical advice.
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            For researchers, lab staff, and anyone who needs neutral reference and precise calculations.
           </p>
           <div className="mt-8">
             <QuickSearch />
           </div>
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <Link href="/tools/syringe-planner" className="btn-primary">
-              Visual Syringe Planner
+          <div className="mt-6 flex flex-wrap items-center gap-3 sm:gap-4">
+            <Link href="/tools/calculator" className="btn-primary">
+              Recon & Dosing Calculator
             </Link>
-            <Link href="/tools/calculator" className="btn-secondary">
-              Calculator
+            <Link href="/tools/syringe-planner" className="btn-secondary">
+              Visual Syringe
             </Link>
             <Link href="/peptides" className="btn-secondary">
               Peptide Library
             </Link>
+            <Link href="/peptides/compare" className="btn-secondary">
+              Compare
+            </Link>
             <Link href="/guide" className="link-inline text-sm">
-              Reconstitution guide →
+              New to peptides? Start with the Guide →
             </Link>
           </div>
         </div>
       </section>
 
+      {/* 3D reaction demo: embedded molecule viewer */}
+      <Suspense
+        fallback={
+          <section className="mx-auto max-w-6xl px-4 py-10 sm:py-14" aria-label="3D reaction demo">
+            <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">3D reaction demo</h2>
+            <p className="mt-1 text-slate-600">
+              Multi-frame trajectory: peptide–receptor binding, conformation change. Preset data, no real-time simulation.
+            </p>
+            <div className="mt-6 flex min-h-[280px] items-center justify-center rounded-none border-2 border-slate-200 bg-slate-100 text-slate-500">
+              Loading 3D viewer…
+            </div>
+          </section>
+        }
+      >
+        <HeroTrajectoryView />
+      </Suspense>
+
       {/* Tools */}
       <section
-        className="mx-auto max-w-6xl px-4 py-14"
+        className="mx-auto max-w-6xl px-4 py-10 sm:py-14"
         aria-labelledby="tools-heading"
       >
-        <div className="flex flex-wrap items-baseline justify-between gap-4">
-          <h2 id="tools-heading" className="text-2xl font-semibold text-slate-900">
-            Tools
-          </h2>
-          <Link href="/tools" className="link-inline text-sm font-medium">
-            All tools (Vial & Cycle, Unit Converter, Cost) →
-          </Link>
-        </div>
+        <h2 id="tools-heading" className="text-xl font-semibold text-slate-900 sm:text-2xl">
+          Tools & reference
+        </h2>
+        <p className="mt-1 text-slate-600">
+          Calculate concentration and dose, plan syringe draws, compare peptides, or verify reports. Need vial planning or cost per dose?{" "}
+          <Link href="/tools" className="link-inline font-medium">All tools (Vial & Cycle, Unit Converter, Cost per Dose) →</Link>
+        </p>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {TOOL_CARDS.map((item) => (
             <Link
@@ -138,27 +162,27 @@ export default function HomePage() {
 
       {/* Popular peptides + Purity Pulse */}
       <section
-        className="mx-auto max-w-6xl px-4 py-14"
+        className="mx-auto max-w-6xl px-4 py-10 sm:py-14"
         aria-labelledby="peptides-heading"
       >
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <h2 id="peptides-heading" className="text-2xl font-semibold text-slate-900">
+            <h2 id="peptides-heading" className="text-xl font-semibold text-slate-900 sm:text-2xl">
               Popular peptides
             </h2>
-            <p className="mt-1 text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 sm:text-base">
               Quick links to common research peptides. See{" "}
               <Link href="/peptides" className="link-inline">library</Link>
               {" "}or{" "}
               <Link href="/peptides/compare" className="link-inline">compare</Link>
               {" "}up to 3.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-2 sm:gap-3">
               {POPULAR_PEPTIDES.map((p) => (
                 <Link
                   key={p.slug}
                   href={`/peptides/${p.slug}`}
-                  className="rounded-none border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700"
+                  className="inline-flex min-h-[44px] items-center rounded-none border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700"
                 >
                   {p.name}
                 </Link>
@@ -172,29 +196,39 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-6xl px-4 py-14" aria-label="Verify">
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:py-14" aria-label="Verify">
         <div className="card border-teal-200 bg-teal-50/50 text-center">
-          <h2 className="text-xl font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
             Verify before you source
           </h2>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
             Use our{" "}
             <Link href="/verify" className="link-inline">
               Purity & Verify
             </Link>{" "}
-            tools to check third-party test reports (e.g. Janoshik) when evaluating purity.
+            tools to check third-party test reports (e.g. Janoshik) by task ID — for procurement, QC, or before you buy.
           </p>
           <Link
             href="/verify"
-            className="mt-5 inline-block rounded-none bg-teal-600 px-5 py-2.5 font-medium text-white transition hover:bg-teal-700"
+            className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-none bg-teal-600 px-5 py-2.5 font-medium text-white transition hover:bg-teal-700"
           >
             Open Verify
           </Link>
         </div>
       </section>
 
-      <p className="mx-auto max-w-6xl px-4 text-center text-xs text-slate-500">
+      <p className="mx-auto max-w-6xl px-4 pt-4 pb-8 text-center text-xs text-slate-500">
         For research and education only. Not medical advice. Verify purity with third-party testing when sourcing.
+        {" "}
+        <Link href="/tools" className="link-inline">Tools</Link>
+        {" · "}
+        <Link href="/peptides" className="link-inline">Peptides</Link>
+        {" · "}
+        <Link href="/guide" className="link-inline">Guide</Link>
+        {" · "}
+        <Link href="/faq" className="link-inline">FAQ</Link>
+        {" · "}
+        <Link href="/about" className="link-inline">About</Link>
       </p>
     </div>
   );

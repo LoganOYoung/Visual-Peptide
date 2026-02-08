@@ -9,10 +9,12 @@ const WORKING_LINKS = [
   { href: "/", label: "Home" },
   { href: "/tools", label: "Tools" },
   { href: "/peptides", label: "Peptides" },
-  { href: "/guide", label: "Guide" },
+  { href: "/structure", label: "3D Structure" },
   { href: "/verify", label: "Verify" },
-  { href: "/about", label: "About" },
+  { href: "/suppliers", label: "Suppliers" },
+  { href: "/guide", label: "Guide" },
   { href: "/faq", label: "FAQ" },
+  { href: "/about", label: "About" },
 ];
 
 export default function NotFound() {

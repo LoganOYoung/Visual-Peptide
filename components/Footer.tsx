@@ -10,12 +10,12 @@ export function Footer() {
             <img src="/logo.svg" alt="" className="h-8 w-8 shrink-0" width={32} height={32} />
             Visual Peptide
           </div>
-          <nav className="flex flex-wrap gap-4">
+          <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Footer">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-slate-600 transition hover:text-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-none"
+                className="min-h-[44px] py-2 text-sm text-slate-600 transition hover:text-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-none inline-flex items-center"
               >
                 {link.label}
               </Link>

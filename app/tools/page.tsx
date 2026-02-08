@@ -40,6 +40,13 @@ export default function ToolsIndexPage() {
           </Link>
         ))}
       </div>
+      <p className="mt-8 text-sm text-slate-500">
+        <Link href="/guide" className="link-inline">Guide</Link>
+        {" · "}
+        <Link href="/faq" className="link-inline">FAQ</Link>
+        {" · "}
+        <Link href="/peptides" className="link-inline">Peptide Library</Link>
+      </p>
     </div>
   );
 }

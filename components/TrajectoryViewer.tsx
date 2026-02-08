@@ -19,15 +19,18 @@ type ViewerInstance = {
   getNumFrames?: () => number;
   clear?: () => void;
   destroy?: () => void;
+  pngURI?: () => string;
 };
 
 type ThreeDmolLib = { createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance };
 
 interface TrajectoryViewerProps {
-  /** Ordered list of PDB IDs: each fetched from RCSB as one frame. Use this OR pdbUrl. */
+  /** Ordered list of PDB IDs: each fetched from RCSB as one frame. Use this OR pdbUrl OR framePdbTexts. */
   framePdbIds?: string[];
-  /** Single multi-MODEL PDB file: path (e.g. /trajectories/demo.pdb) or full URL. Use this OR framePdbIds. */
+  /** Single multi-MODEL PDB file: path or full URL. Use this OR framePdbIds OR framePdbTexts. */
   pdbUrl?: string;
+  /** Pre-computed PDB strings (e.g. from morphing). When provided, no fetch. Use this OR framePdbIds OR pdbUrl. */
+  framePdbTexts?: string[];
   title?: string;
   minHeight?: number;
   /** Interval between frames in ms. */
@@ -57,6 +60,7 @@ function parseMultiModelPdb(pdbText: string): string[] {
 export function TrajectoryViewer({
   framePdbIds,
   pdbUrl,
+  framePdbTexts,
   title = "3D reaction demo",
   minHeight = 480,
   intervalMs = 600,
@@ -69,20 +73,24 @@ export function TrajectoryViewer({
   const [playing, setPlaying] = useState(autoPlay);
   const [frame, setFrame] = useState(0);
   const [totalFrames, setTotalFrames] = useState(0);
+  const [speed, setSpeed] = useState<number>(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const viewerRef = useRef<ViewerInstance | null>(null);
   const frameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const frameTextsRef = useRef<string[]>([]);
   const animationModeRef = useRef<"native" | "manual" | "none">("none");
   const currentFrameIndexRef = useRef(0);
   const intervalMsRef = useRef(intervalMs);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   intervalMsRef.current = intervalMs;
 
   const usePdbUrl = Boolean(pdbUrl?.trim());
   const useFrameIds = Boolean(framePdbIds?.length);
+  const usePrecomputed = Boolean(framePdbTexts?.length);
 
   useEffect(() => {
-    if (!usePdbUrl && !useFrameIds) {
-      setError("Provide framePdbIds or pdbUrl");
+    if (!usePdbUrl && !useFrameIds && !usePrecomputed) {
+      setError("Provide framePdbIds, pdbUrl, or framePdbTexts");
       return;
     }
 
@@ -97,6 +105,10 @@ export function TrajectoryViewer({
     };
 
     const loadFrames = (): Promise<{ texts: string[]; combined: string }> => {
+      if (usePrecomputed && framePdbTexts?.length) {
+        const combined = buildMultiModelPdb(framePdbTexts);
+        return Promise.resolve({ texts: framePdbTexts, combined });
+      }
       if (usePdbUrl && pdbUrl) {
         return fetch(pdbUrl.trim(), { cache: "force-cache" })
           .then((r) => {
@@ -161,15 +173,17 @@ export function TrajectoryViewer({
             else animationModeRef.current = "none";
           }
 
-          viewer.setStyle({}, { cartoon: { color: "spectrum" } });
+          viewer.setStyle({}, { stick: {}, cartoon: { color: "spectrum" } });
           viewer.zoomTo();
           viewer.render();
           setTotalFrames(numF);
           setFrame(0);
           setLoaded(true);
 
+          const baseMs = intervalMsRef.current;
+          const effectiveMs = Math.max(100, Math.round(baseMs / speed));
           if (numF > 1 && useNativeAnimation && typeof viewer.animate === "function") {
-            viewer.animate({ loop: "forward", reps: 0, interval: intervalMs });
+            viewer.animate({ loop: "forward", reps: 0, interval: effectiveMs });
             setPlaying(true);
           } else if (numF > 1 && animationModeRef.current === "manual" && frameTexts.length > 1) {
             currentFrameIndexRef.current = 0;
@@ -181,10 +195,10 @@ export function TrajectoryViewer({
               currentFrameIndexRef.current = next;
               viewerRef.current.clear?.();
               viewerRef.current.addModel(textsNow[next], "pdb");
-              viewerRef.current.setStyle({}, { cartoon: { color: "spectrum" } });
+              viewerRef.current.setStyle({}, { stick: {}, cartoon: { color: "spectrum" } });
               viewerRef.current.render();
               setFrame(next);
-            }, intervalMs);
+            }, effectiveMs);
             setPlaying(true);
           }
         })
@@ -237,7 +251,7 @@ export function TrajectoryViewer({
       if (viewerRef.current?.destroy) viewerRef.current.destroy();
       viewerRef.current = null;
     };
-  }, [usePdbUrl ? pdbUrl : (framePdbIds ?? []).join(","), intervalMs, autoPlay]);
+  }, [usePrecomputed ? (framePdbTexts ?? []).length : (usePdbUrl ? pdbUrl : (framePdbIds ?? []).join(",")), intervalMs, autoPlay]);
 
   // Sync frame index from viewer when playing (optional: poll getFrame)
   useEffect(() => {
@@ -260,8 +274,9 @@ export function TrajectoryViewer({
       }
       setPlaying(false);
     } else {
+      const eff = Math.max(100, Math.round(intervalMsRef.current / speed));
       if (animationModeRef.current === "native") {
-        v.animate?.({ loop: "forward", reps: 0, interval: intervalMsRef.current });
+        v.animate?.({ loop: "forward", reps: 0, interval: eff });
       } else if (animationModeRef.current === "manual") {
         const textsNow = frameTextsRef.current;
         if (textsNow.length <= 1) return;
@@ -272,12 +287,66 @@ export function TrajectoryViewer({
           currentFrameIndexRef.current = next;
           viewerRef.current.clear?.();
           viewerRef.current.addModel(textsNow[next], "pdb");
-          viewerRef.current.setStyle({}, { cartoon: { color: "spectrum" } });
+          viewerRef.current.setStyle({}, { stick: {}, cartoon: { color: "spectrum" } });
           viewerRef.current.render();
           setFrame(next);
-        }, intervalMsRef.current);
+        }, eff);
       }
       setPlaying(true);
+    }
+  };
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    if (!playing || totalFrames <= 1 || !viewerRef.current) return;
+    if (animationModeRef.current === "native") {
+      viewerRef.current.pauseAnimate?.();
+      viewerRef.current.animate?.({ loop: "forward", reps: 0, interval: Math.max(100, Math.round(intervalMsRef.current / speed)) });
+    } else if (animationModeRef.current === "manual" && frameIntervalRef.current) {
+      clearInterval(frameIntervalRef.current);
+      const textsNow = frameTextsRef.current;
+      if (textsNow.length <= 1) return;
+      const eff = Math.max(100, Math.round(intervalMsRef.current / speed));
+      frameIntervalRef.current = setInterval(() => {
+        if (!viewerRef.current) return;
+        const next = (currentFrameIndexRef.current + 1) % textsNow.length;
+        currentFrameIndexRef.current = next;
+        viewerRef.current.clear?.();
+        viewerRef.current.addModel(textsNow[next], "pdb");
+        viewerRef.current.setStyle({}, { stick: {}, cartoon: { color: "spectrum" } });
+        viewerRef.current.render();
+        setFrame(next);
+      }, eff);
+    }
+  }, [speed]);
+
+  const handleFullscreen = () => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    if (!document.fullscreenElement) {
+      wrapper.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  };
+
+  const handleScreenshot = () => {
+    const v = viewerRef.current;
+    if (!v?.pngURI) return;
+    try {
+      const dataUrl = v.pngURI();
+      if (!dataUrl) return;
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `trajectory-frame-${frame + 1}.png`;
+      a.click();
+    } catch {
+      // ignore
     }
   };
 
@@ -294,7 +363,7 @@ export function TrajectoryViewer({
         currentFrameIndexRef.current = i;
         v.clear?.();
         v.addModel(textsNow[i], "pdb");
-        v.setStyle({}, { cartoon: { color: "spectrum" } });
+        v.setStyle({}, { stick: {}, cartoon: { color: "spectrum" } });
         v.render();
         setFrame(i);
       }
@@ -309,7 +378,7 @@ export function TrajectoryViewer({
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 py-2">
         <span className="text-sm font-medium text-slate-700">{title}</span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {totalFrames > 1 && (
             <>
               <button
@@ -322,11 +391,42 @@ export function TrajectoryViewer({
               <span className="text-xs text-slate-500">
                 Frame {frame + 1} / {totalFrames}
               </span>
+              <select
+                value={speed}
+                onChange={(e) => setSpeed(Number(e.target.value))}
+                className="rounded-none border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 focus:border-teal-500 focus:outline-none"
+                title="Playback speed"
+              >
+                <option value={0.5}>0.5×</option>
+                <option value={1}>1×</option>
+                <option value={1.5}>1.5×</option>
+                <option value={2}>2×</option>
+              </select>
+            </>
+          )}
+          {loaded && (
+            <>
+              <button
+                type="button"
+                onClick={handleFullscreen}
+                className="rounded-none border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                title="Fullscreen"
+              >
+                {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              </button>
+              <button
+                type="button"
+                onClick={handleScreenshot}
+                className="rounded-none border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                title="Download screenshot"
+              >
+                Screenshot
+              </button>
             </>
           )}
         </div>
       </div>
-      <div className="relative w-full" style={{ minHeight: `${minHeight}px` }}>
+      <div ref={wrapperRef} className="relative w-full" style={{ minHeight: `${minHeight}px` }}>
         {!loaded && !error && (
           <div
             className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { peptides, PEPTIDE_CATEGORIES, type PeptideCategory } from "@/lib/peptides";
 import { QuickSearch } from "./QuickSearch";
 
 export function PeptideLibrary() {
+  const router = useRouter();
   const [category, setCategory] = useState<PeptideCategory | "all">("all");
 
   const filtered =
@@ -13,13 +15,18 @@ export function PeptideLibrary() {
       ? peptides
       : peptides.filter((p) => (p.category || "other") === category);
 
+  const countByCategory = (id: PeptideCategory | "all") =>
+    id === "all"
+      ? peptides.length
+      : peptides.filter((p) => (p.category || "other") === id).length;
+
   return (
     <div className="space-y-6">
       <div>
         <QuickSearch />
       </div>
       <div>
-        <p className="mb-3 text-sm font-medium text-slate-400">Filter by category</p>
+        <p className="mb-3 text-sm font-medium text-slate-600">Filter by category</p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -30,7 +37,7 @@ export function PeptideLibrary() {
                 : "bg-slate-200 text-slate-700 hover:bg-slate-300"
             }`}
           >
-            All
+            All ({countByCategory("all")})
           </button>
           {PEPTIDE_CATEGORIES.map((c) => (
             <button
@@ -43,11 +50,16 @@ export function PeptideLibrary() {
                   : "bg-slate-200 text-slate-700 hover:bg-slate-300"
               }`}
             >
-              {c.label}
+              {c.label} ({countByCategory(c.id)})
             </button>
           ))}
         </div>
       </div>
+      {filtered.length === 0 ? (
+        <p className="rounded-none border border-slate-200 bg-slate-50 px-4 py-8 text-center text-slate-600">
+          No peptides in this category.
+        </p>
+      ) : (
       <ul className="space-y-4">
         {filtered.map((p) => (
           <li key={p.slug}>
@@ -68,23 +80,37 @@ export function PeptideLibrary() {
                   {p.shortName && (
                     <p className="text-sm text-slate-500">{p.shortName}</p>
                   )}
-                  <p className="mt-2 text-sm text-slate-400 line-clamp-2">
+                  <p className="mt-2 text-sm text-slate-600 line-clamp-2">
                     {p.description}
                   </p>
                 </div>
-                <div className="text-right text-sm text-slate-400">
-                  {p.typicalDoseMcg && (
-                    <span className="block">Typical: {p.typicalDoseMcg} mcg</span>
-                  )}
-                  {p.frequency && (
-                    <span className="block">{p.frequency}</span>
-                  )}
+                <div className="flex flex-col items-end gap-1 text-sm text-slate-400">
+                  <div>
+                    {p.typicalDoseMcg && (
+                      <span className="block">Typical: {p.typicalDoseMcg} mcg</span>
+                    )}
+                    {p.frequency && (
+                      <span className="block">{p.frequency}</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      router.push(`/peptides/compare?compare=${encodeURIComponent(p.slug)}`);
+                    }}
+                    className="text-left text-teal-600 hover:underline"
+                  >
+                    Compare
+                  </button>
                 </div>
               </div>
             </Link>
           </li>
         ))}
       </ul>
+      )}
     </div>
   );
 }

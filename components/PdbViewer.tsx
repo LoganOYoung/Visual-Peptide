@@ -27,6 +27,7 @@ export function PdbViewer({ pdbId, title, minHeight = 400, className = "" }: Pdb
           target="_blank"
           rel="noopener noreferrer"
           className="link-inline text-xs"
+          aria-label="Open structure in RCSB (new tab)"
         >
           Open in new tab →
         </Link>

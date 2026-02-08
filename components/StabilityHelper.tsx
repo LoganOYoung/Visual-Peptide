@@ -9,8 +9,8 @@ export function StabilityHelper() {
   const [daysStable, setDaysStable] = useState(String(DEFAULT_DAYS));
 
   const useBy = useMemo(() => {
-    if (!reconDate) return null;
-    const d = new Date(reconDate);
+    if (!reconDate.trim()) return null;
+    const d = new Date(reconDate.trim());
     if (isNaN(d.getTime())) return null;
     const days = parseInt(daysStable, 10) || DEFAULT_DAYS;
     d.setDate(d.getDate() + days);
@@ -19,18 +19,22 @@ export function StabilityHelper() {
 
   return (
     <div className="card">
-      <h2 className="text-lg font-semibold text-slate-900">5. Reconstitution stability / use-by</h2>
+      <h2 className="text-lg font-semibold text-slate-900">6. Reconstitution stability / use-by</h2>
       <p className="mt-1 text-sm text-slate-600">
-        Many peptides are stable 2–8 °C for about 30 days after reconstitution. This is a rough guide only; follow product or protocol.
+        Many peptides are stable 2–8 °C for about 30 days after reconstitution. Stability varies by peptide and formulation; the 30-day default is a common reference only. Follow product or protocol.
       </p>
       <div className="mt-4 flex flex-wrap gap-4">
         <label>
           <span className="block text-sm font-medium text-slate-600">Recon date</span>
           <input
-            type="date"
+            type="text"
+            autoComplete="off"
             value={reconDate}
             onChange={(e) => setReconDate(e.target.value)}
             className="input mt-1 max-w-[180px]"
+            placeholder="YYYY-MM-DD"
+            aria-label="Reconstitution date (YYYY-MM-DD)"
+            lang="en"
           />
         </label>
         <label>

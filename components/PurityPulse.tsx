@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { purityPulseEntries } from "@/lib/purityPulse";
 
 function formatDate(d: string | undefined) {
@@ -9,19 +12,19 @@ function formatDate(d: string | undefined) {
 }
 
 export function PurityPulse() {
+  const pathname = usePathname();
+  const isVerifyPage = pathname === "/verify";
+
   return (
     <aside className="card border-teal-200">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-slate-900">Peptide Transparency Board</h2>
-        <span className="rounded-none bg-teal-500/20 px-2 py-0.5 text-xs font-medium text-teal-600">
-          Live
-        </span>
-      </div>
+      <h2 className="text-lg font-semibold text-slate-900">Example verified batches</h2>
       <p className="mt-1 text-sm text-slate-600">
-        Crowdsourced batch verifications from independent labs.{" "}
-        <Link href="/verify" className="link-inline">
-          Verify reports →
-        </Link>
+        Sample of independently tested batches (Janoshik).
+        {isVerifyPage
+          ? " To verify a specific report, use the form above with its task ID."
+          : " To verify a report by task ID, see "}
+        {!isVerifyPage && <Link href="/verify" className="link-inline">Purity & Verify</Link>}
+        {!isVerifyPage && "."}
       </p>
       <ul className="mt-4 space-y-0">
         {purityPulseEntries.map((entry, i) => (

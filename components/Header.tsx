@@ -3,11 +3,12 @@
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { headerLinks, toolsSubLinks, peptidesSubLinks, helpSubLinks } from "@/lib/nav";
+import { headerLinks, toolsSubLinks, peptidesSubLinks, structureSubLinks, helpSubLinks } from "@/lib/nav";
 
 const DROPDOWN_LINKS: Record<string, { href: string; label: string }[]> = {
   "/tools": toolsSubLinks as unknown as { href: string; label: string }[],
   "/peptides": peptidesSubLinks as unknown as { href: string; label: string }[],
+  "/structure": structureSubLinks as unknown as { href: string; label: string }[],
   "/guide": helpSubLinks as unknown as { href: string; label: string }[],
 };
 
@@ -109,7 +110,7 @@ export function Header() {
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((o) => !o)}
-          className="rounded-none p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-none text-slate-600 hover:bg-slate-100 hover:text-slate-900 md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         >
           {mobileOpen ? (
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -123,8 +124,8 @@ export function Header() {
         </button>
       </div>
       {mobileOpen && (
-        <nav className="border-t border-slate-200 bg-white md:hidden">
-          <ul className="mx-auto max-w-6xl px-4 py-3 space-y-1">
+        <nav className="border-t border-slate-200 bg-white md:hidden" aria-label="Mobile menu">
+          <ul className="mx-auto max-w-6xl space-y-1 px-4 py-3">
             {headerLinks.map((link) => {
               const sub = DROPDOWN_LINKS[link.href];
               const isActive =
@@ -136,7 +137,7 @@ export function Header() {
                   <Link
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`block rounded-none px-3 py-2.5 text-sm font-medium transition ${
+                    className={`flex min-h-[44px] items-center rounded-none px-3 py-3 text-sm font-medium transition ${
                       isActive ? "bg-teal-50 text-teal-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     }`}
                   >
@@ -149,7 +150,7 @@ export function Header() {
                           <Link
                             href={s.href}
                             onClick={() => setMobileOpen(false)}
-                            className="block py-1.5 text-sm text-slate-600 hover:text-teal-600"
+                            className="flex min-h-[40px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
                           >
                             {s.label}
                           </Link>

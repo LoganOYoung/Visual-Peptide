@@ -40,7 +40,7 @@ export function QuickSearch() {
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
         placeholder="Search by name, CAS, or sequence..."
-        className="input w-full py-4 text-lg"
+        className="input w-full py-3 text-base sm:py-4 sm:text-lg"
         aria-autocomplete="list"
         aria-controls="quick-search-results"
         aria-expanded={showDropdown}

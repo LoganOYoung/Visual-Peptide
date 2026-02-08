@@ -46,6 +46,13 @@ export default function CostPage() {
       </section>
 
       <p className="mt-6 text-xs text-slate-500">For comparison only. Prices vary by supplier and region.</p>
+      <p className="mt-4 text-sm text-slate-600">
+        <Link href="/guide#concentration-dose" className="link-inline">Guide: Concentration & dose</Link>
+        {" · "}
+        <Link href="/tools/calculator" className="link-inline">Recon & Dosing Calculator</Link>
+        {" · "}
+        <Link href="/tools/vial-cycle" className="link-inline">Vial & Cycle</Link>
+      </p>
     </div>
   );
 }

@@ -68,22 +68,10 @@ export default function StructurePage({
         View peptide and protein structures from the PDB. Drag to rotate, scroll to zoom.
       </p>
       <p className="mt-1 text-sm text-slate-500">
-        <Link href="/structure/demo" className="link-inline">3D reaction demo</Link>
-        {" · "}
-        <Link href="/peptides" className="link-inline">Peptide Library</Link>
-        {" · "}
-        <Link href="/tools/calculator" className="link-inline">Calculator</Link>
+        For multi-frame trajectories: <Link href="/structure/demo" className="link-inline">3D reaction demo</Link>
       </p>
 
-      <div className="card mt-8">
-        <h2 className="text-lg font-semibold text-slate-900">Load structure by PDB ID</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Enter a PDB ID to load the structure in the viewer below (in-site only, no external page).
-        </p>
-        <p className="mt-1 text-xs text-slate-500">Or pick one from Quick load below.</p>
-        <PdbOpener initialPdb={initialPdb} />
-      </div>
-
+      {/* Viewer first: see the 3D, then change structure */}
       <div className="mt-8">
         {isDemo && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
@@ -107,7 +95,7 @@ export default function StructurePage({
         {!isDemo && initialPdb && !peptideForPdb && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-slate-200 bg-slate-50 px-4 py-3">
             <span className="text-slate-700">PDB <strong className="text-slate-900">{initialPdb}</strong></span>
-            <Link href={`https://www.rcsb.org/3d-view/${initialPdb}`} target="_blank" rel="noopener noreferrer" className="link-inline text-sm">
+            <Link href={`https://www.rcsb.org/3d-view/${initialPdb}`} target="_blank" rel="noopener noreferrer" className="link-inline text-sm" aria-label="Open RCSB 3D view in new tab">
               Open in RCSB →
             </Link>
           </div>
@@ -121,17 +109,17 @@ export default function StructurePage({
             /structure?pdb={displayPdb}
           </Link>
         </p>
-        <p className="mt-2 text-sm text-slate-500">
-          To load another structure, use the PDB input at the top or the Quick load list below.
-        </p>
       </div>
 
+      {/* Single card: load by ID or pick from list */}
       <div className="card mt-8">
-        <h2 className="text-lg font-semibold text-slate-900">Quick load</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Load or pick a structure</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Click a PDB to load in the viewer. Small structures load faster.
+          Enter a PDB ID or click one below to load in the viewer above.
         </p>
-        <ul className="mt-4 flex flex-wrap gap-2">
+        <PdbOpener initialPdb={initialPdb} />
+        <p className="mt-4 text-xs font-medium uppercase tracking-wider text-slate-500">Quick load</p>
+        <ul className="mt-2 flex flex-wrap gap-2">
           {quickLoadIds.map(({ id, label }) => (
             <li key={id}>
               <Link
@@ -145,8 +133,16 @@ export default function StructurePage({
         </ul>
       </div>
 
+      <p className="mt-4 text-sm text-slate-500">
+        To load another structure, use the form above.
+      </p>
+
       <p className="mt-6 text-sm text-slate-500">
-        Data from RCSB PDB. For research and education. Not all peptides have a public 3D structure; small peptides may be under different IDs or in other databases.
+        Data from RCSB PDB. For research and education.{" "}
+        <Link href="/peptides" className="link-inline">Peptide Library</Link>
+        {" · "}
+        <Link href="/tools/calculator" className="link-inline">Calculator</Link>
+        . Not all peptides have a public 3D structure; small peptides may be under different IDs or in other databases.
       </p>
     </div>
   );

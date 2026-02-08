@@ -21,7 +21,7 @@ export default function SuppliersPage() {
         <h2 className="text-lg font-semibold text-slate-900">Verification first</h2>
         <p className="mt-2 text-slate-600">
           Before choosing a supplier, check the{" "}
-          <Link href="/verify" className="text-teal-600 hover:underline">
+          <Link href="/verify" className="link-inline">
             Purity & Verify
           </Link>{" "}
           page and use the public Janoshik database to see which batches and vendors have test reports.
@@ -59,7 +59,8 @@ export default function SuppliersPage() {
                           href={s.reportsLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-teal-600 hover:underline"
+                          className="link-inline"
+                          aria-label="View reports (opens in new tab)"
                         >
                           View
                         </a>
@@ -75,6 +76,15 @@ export default function SuppliersPage() {
           </div>
         )}
       </div>
+      <p className="mt-8 text-sm text-slate-500">
+        <Link href="/verify" className="link-inline">Purity & Verify</Link>
+        {" · "}
+        <Link href="/guide" className="link-inline">Guide</Link>
+        {" · "}
+        <Link href="/faq" className="link-inline">FAQ</Link>
+        {" · "}
+        <Link href="/peptides" className="link-inline">Peptide Library</Link>
+      </p>
     </div>
   );
 }
