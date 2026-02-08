@@ -23,11 +23,15 @@ export const headerLinks: { href: string; label: string }[] = [
   { href: "/guide", label: "Help" },
 ];
 
-/** Help 下拉子项 */
+/** Help 下拉子项（href 以 http 开头时为外链，新开 tab） */
 export const helpSubLinks = [
   { href: "/guide", label: "Guide" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
+  {
+    href: "https://github.com/LoganOYoung/Visual-Peptide/issues/new?title=Feedback%3A%20&body=**Page**%3A%20%0A**What%20went%20wrong%20or%20suggestion**%3A%20%0A",
+    label: "Feedback",
+  },
 ] as const;
 
 /** Tools 子页 */

@@ -20,6 +20,15 @@ export function Footer() {
                 {link.label}
               </Link>
             ))}
+            <a
+              href="https://github.com/LoganOYoung/Visual-Peptide/issues/new?title=Feedback%3A%20&body=**Page**%3A%20%0A**What%20went%20wrong%20or%20suggestion**%3A%20%0A"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-h-[44px] py-2 text-sm text-slate-600 transition hover:text-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-none inline-flex items-center"
+              aria-label="Send feedback (opens GitHub Issues)"
+            >
+              Feedback
+            </a>
           </nav>
         </div>
         <p className="mt-6 text-xs text-slate-500">

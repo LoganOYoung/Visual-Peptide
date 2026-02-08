@@ -78,13 +78,25 @@ export function Header() {
                     >
                       {sub.map((s) => (
                         <li key={s.href}>
-                          <Link
-                            href={s.href}
-                            className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                            onClick={() => setOpenDropdown(null)}
-                          >
-                            {s.label}
-                          </Link>
+                          {s.href.startsWith("http") ? (
+                            <a
+                              href={s.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                              onClick={() => setOpenDropdown(null)}
+                            >
+                              {s.label}
+                            </a>
+                          ) : (
+                            <Link
+                              href={s.href}
+                              className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                              onClick={() => setOpenDropdown(null)}
+                            >
+                              {s.label}
+                            </Link>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -147,13 +159,25 @@ export function Header() {
                     <ul className="ml-4 mt-1 space-y-0.5 border-l border-slate-200 pl-3">
                       {sub.map((s) => (
                         <li key={s.href}>
-                          <Link
-                            href={s.href}
-                            onClick={() => setMobileOpen(false)}
-                            className="flex min-h-[40px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
-                          >
-                            {s.label}
-                          </Link>
+                          {s.href.startsWith("http") ? (
+                            <a
+                              href={s.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setMobileOpen(false)}
+                              className="flex min-h-[40px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
+                            >
+                              {s.label}
+                            </a>
+                          ) : (
+                            <Link
+                              href={s.href}
+                              onClick={() => setMobileOpen(false)}
+                              className="flex min-h-[40px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
+                            >
+                              {s.label}
+                            </Link>
+                          )}
                         </li>
                       ))}
                     </ul>
