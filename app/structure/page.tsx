@@ -38,13 +38,19 @@ function resolveSearchParams(searchParams?: SearchParams | null): SearchParams {
   return searchParams ?? {};
 }
 
+async function getResolvedParams(
+  searchParams?: SearchParams | Promise<SearchParams>
+): Promise<SearchParams> {
+  return searchParams instanceof Promise ? await searchParams : resolveSearchParams(searchParams);
+}
+
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams?: SearchParams | Promise<SearchParams>;
 }): Promise<Metadata> {
   try {
-    const params = searchParams instanceof Promise ? await searchParams : resolveSearchParams(searchParams);
+    const params = await getResolvedParams(searchParams);
     const pdb = params?.pdb?.trim().toUpperCase();
     if (pdb) {
       return {
@@ -70,11 +76,7 @@ export async function generateMetadata({
   }
 }
 
-/** Default structure shown when no ?pdb= is in the URL (demo). */
-const DEFAULT_DEMO_PDB = "6XBM";
-const DEFAULT_DEMO_LABEL = "Semaglutide (GLP-1)";
-
-/** Extra PDB IDs for testing 3D viewer (small/fast or peptide-related). */
+/** PDB IDs for quick load; first is the default demo when no ?pdb= in URL. */
 const TEST_PDB_IDS: { id: string; label: string }[] = [
   { id: "6XBM", label: "Semaglutide (GLP-1)" },
   { id: "1CRN", label: "Crambin (small protein)" },
@@ -89,6 +91,9 @@ const TEST_PDB_IDS: { id: string; label: string }[] = [
   { id: "1D4P", label: "Small peptide" },
   { id: "7F9W", label: "GLP-1 receptor" },
 ];
+
+const DEFAULT_DEMO_PDB = TEST_PDB_IDS[0].id;
+const DEFAULT_DEMO_LABEL = TEST_PDB_IDS[0].label;
 
 function StructurePageFallback() {
   return (
@@ -113,7 +118,7 @@ export default async function StructurePage({
   searchParams?: SearchParams | Promise<SearchParams>;
 }) {
   try {
-    const params = searchParams instanceof Promise ? await searchParams : resolveSearchParams(searchParams);
+    const params = await getResolvedParams(searchParams);
     const initialPdb = params?.pdb?.trim() ?? "";
     const initialChain = params?.chain?.trim() || null;
     const initialResidues = params?.residues?.trim() || null;
