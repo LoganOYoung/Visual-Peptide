@@ -212,11 +212,14 @@ export function PdbViewerInSite({
     const v = viewerRef.current;
     if (!loaded || !v || chains.length === 0) return;
     const base = { color: "spectrum" as const };
-    v.setStyle({}, { [displayMode]: base });
+    const clickSphere = { clicksphere: { radius: 0.4 } };
+    v.setStyle({}, { [displayMode]: base, ...clickSphere });
     chains.forEach((c) => {
       v.setStyle(
         { chain: c },
-        visibleChains.has(c) ? { [displayMode]: base } : { [displayMode]: { ...base, opacity: 0 } }
+        visibleChains.has(c)
+          ? { [displayMode]: base, ...clickSphere }
+          : { [displayMode]: { ...base, opacity: 0 }, ...clickSphere }
       );
     });
     v.render();
