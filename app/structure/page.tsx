@@ -1,35 +1,59 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import nextDynamic from "next/dynamic";
 import { peptides, getPeptideByPdbId } from "@/lib/peptides";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
-import { PdbViewerInSite } from "@/components/PdbViewerInSite";
 import { PdbStructureMetadata } from "@/components/PdbStructureMetadata";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
+/** Load 3D viewer only on client to avoid SSR/hydration or browser-only deps (e.g. 3Dmol) breaking production. */
+const PdbViewerInSite = nextDynamic(
+  () => import("@/components/PdbViewerInSite").then((m) => ({ default: m.PdbViewerInSite })),
+  { ssr: false, loading: () => <div className="h-[500px] animate-pulse rounded-none bg-slate-200" /> }
+);
+
 const structureCanonical = getCanonicalUrl("/structure");
 
-export function generateMetadata({
+/** Uses searchParams so must be dynamic; avoid static generation at build time. */
+export const dynamic = "force-dynamic";
+
+type SearchParams = { pdb?: string; chain?: string; residues?: string; labels?: string; simple?: string };
+
+function resolveSearchParams(searchParams?: SearchParams | null): SearchParams {
+  return searchParams ?? {};
+}
+
+export async function generateMetadata({
   searchParams,
 }: {
-  searchParams?: { pdb?: string };
-}): Metadata {
-  const pdb = searchParams?.pdb?.trim().toUpperCase();
-  if (pdb) {
+  searchParams?: SearchParams | Promise<SearchParams>;
+}): Promise<Metadata> {
+  try {
+    const params = searchParams instanceof Promise ? await searchParams : resolveSearchParams(searchParams);
+    const pdb = params?.pdb?.trim().toUpperCase();
+    if (pdb) {
+      return {
+        title: `PDB ${pdb} — 3D Structure`,
+        description: `View PDB structure ${pdb} in 3D. Peptide and protein molecular viewer.`,
+        alternates: { canonical: structureCanonical },
+        openGraph: { url: structureCanonical },
+      };
+    }
     return {
-      title: `PDB ${pdb} — 3D Structure`,
-      description: `View PDB structure ${pdb} in 3D. Peptide and protein molecular viewer.`,
+      title: "3D Structure",
+      description: "View peptide structures in 3D. In-site viewer (no external embed).",
+      alternates: { canonical: structureCanonical },
+      openGraph: { url: structureCanonical },
+    };
+  } catch {
+    return {
+      title: "3D Structure",
+      description: "View peptide structures in 3D.",
       alternates: { canonical: structureCanonical },
       openGraph: { url: structureCanonical },
     };
   }
-  return {
-    title: "3D Structure",
-    description: "View peptide structures in 3D. In-site viewer (no external embed).",
-    alternates: { canonical: structureCanonical },
-    openGraph: { url: structureCanonical },
-  };
 }
 
 /** Default structure shown when no ?pdb= is in the URL (demo). */
@@ -52,32 +76,51 @@ const TEST_PDB_IDS: { id: string; label: string }[] = [
   { id: "7F9W", label: "GLP-1 receptor" },
 ];
 
-export default function StructurePage({
+function StructurePageFallback() {
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-12 text-center">
+      <h1 className="text-xl font-semibold text-slate-900">3D Structure</h1>
+      <p className="mt-2 text-slate-600">The viewer failed to load. You can try again or go home.</p>
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <Link href="/structure" className="btn-primary">
+          Open structure page
+        </Link>
+        <Link href="/" className="rounded-none border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          Go home
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default async function StructurePage({
   searchParams,
 }: {
-  searchParams?: { pdb?: string; chain?: string; residues?: string; labels?: string; simple?: string };
+  searchParams?: SearchParams | Promise<SearchParams>;
 }) {
-  const initialPdb = searchParams?.pdb?.trim() ?? "";
-  const initialChain = searchParams?.chain?.trim() || null;
-  const initialResidues = searchParams?.residues?.trim() || null;
-  const fixedLabels = searchParams?.labels?.trim() || null;
-  const withPdb = peptides.filter((p) => p.pdbId);
-  const peptideForPdb = initialPdb ? getPeptideByPdbId(initialPdb) : undefined;
-  const isDemo = !initialPdb;
-  const displayPdb = initialPdb || DEFAULT_DEMO_PDB;
+  try {
+    const params = searchParams instanceof Promise ? await searchParams : resolveSearchParams(searchParams);
+    const initialPdb = params?.pdb?.trim() ?? "";
+    const initialChain = params?.chain?.trim() || null;
+    const initialResidues = params?.residues?.trim() || null;
+    const fixedLabels = params?.labels?.trim() || null;
+    const withPdb = peptides.filter((p) => p.pdbId);
+    const peptideForPdb = initialPdb ? getPeptideByPdbId(initialPdb) : undefined;
+    const isDemo = !initialPdb;
+    const displayPdb = initialPdb || DEFAULT_DEMO_PDB;
 
-  const shareableParams = new URLSearchParams({ pdb: displayPdb });
-  if (initialChain) shareableParams.set("chain", initialChain);
-  if (initialResidues) shareableParams.set("residues", initialResidues);
-  if (fixedLabels) shareableParams.set("labels", fixedLabels);
-  const shareablePath = `/structure?${shareableParams.toString()}`;
+    const shareableParams = new URLSearchParams({ pdb: displayPdb });
+    if (initialChain) shareableParams.set("chain", initialChain);
+    if (initialResidues) shareableParams.set("residues", initialResidues);
+    if (fixedLabels) shareableParams.set("labels", fixedLabels);
+    const shareablePath = `/structure?${shareableParams.toString()}`;
 
-  const quickLoadIds = [
-    ...withPdb.map((p) => ({ id: p.pdbId!, label: p.name })),
-    ...TEST_PDB_IDS.filter((t) => !withPdb.some((p) => p.pdbId === t.id)),
-  ];
+    const quickLoadIds = [
+      ...withPdb.map((p) => ({ id: p.pdbId!, label: p.name })),
+      ...TEST_PDB_IDS.filter((t) => !withPdb.some((p) => p.pdbId === t.id)),
+    ];
 
-  return (
+    return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">3D Structure Viewer</h1>
@@ -121,15 +164,13 @@ export default function StructurePage({
           </div>
         )}
         <PdbStructureMetadata pdbId={displayPdb} className="mb-4" />
-        <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>
-          <PdbViewerInSite
-            pdbId={displayPdb}
-            minHeight={500}
-            initialChain={initialChain}
-            initialResidues={initialResidues}
-            fixedLabels={fixedLabels}
-          />
-        </Suspense>
+        <PdbViewerInSite
+          pdbId={displayPdb}
+          minHeight={500}
+          initialChain={initialChain}
+          initialResidues={initialResidues}
+          fixedLabels={fixedLabels}
+        />
         <p className="mt-4 text-sm text-slate-600">
           Copy or share:{" "}
           <Link href={shareablePath} className="link-inline font-medium">
@@ -172,5 +213,9 @@ export default function StructurePage({
         . Not all peptides have a public 3D structure; small peptides may be under different IDs or in other databases.
       </p>
     </div>
-  );
+    );
+  } catch (err) {
+    console.error("Structure page server error:", err);
+    return <StructurePageFallback />;
+  }
 }
