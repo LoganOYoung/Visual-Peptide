@@ -5,6 +5,7 @@ import { peptides, getPeptideByPdbId } from "@/lib/peptides";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
 import { PdbViewerInSite } from "@/components/PdbViewerInSite";
+import { PdbStructureMetadata } from "@/components/PdbStructureMetadata";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
 const structureCanonical = getCanonicalUrl("/structure");
@@ -54,13 +55,22 @@ const TEST_PDB_IDS: { id: string; label: string }[] = [
 export default function StructurePage({
   searchParams,
 }: {
-  searchParams?: { pdb?: string };
+  searchParams?: { pdb?: string; chain?: string; residues?: string; labels?: string; simple?: string };
 }) {
   const initialPdb = searchParams?.pdb?.trim() ?? "";
+  const initialChain = searchParams?.chain?.trim() || null;
+  const initialResidues = searchParams?.residues?.trim() || null;
+  const fixedLabels = searchParams?.labels?.trim() || null;
   const withPdb = peptides.filter((p) => p.pdbId);
   const peptideForPdb = initialPdb ? getPeptideByPdbId(initialPdb) : undefined;
   const isDemo = !initialPdb;
   const displayPdb = initialPdb || DEFAULT_DEMO_PDB;
+
+  const shareableParams = new URLSearchParams({ pdb: displayPdb });
+  if (initialChain) shareableParams.set("chain", initialChain);
+  if (initialResidues) shareableParams.set("residues", initialResidues);
+  if (fixedLabels) shareableParams.set("labels", fixedLabels);
+  const shareablePath = `/structure?${shareableParams.toString()}`;
 
   const quickLoadIds = [
     ...withPdb.map((p) => ({ id: p.pdbId!, label: p.name })),
@@ -107,13 +117,20 @@ export default function StructurePage({
             </Link>
           </div>
         )}
+        <PdbStructureMetadata pdbId={displayPdb} className="mb-4" />
         <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>
-          <PdbViewerInSite pdbId={displayPdb} minHeight={500} />
+          <PdbViewerInSite
+            pdbId={displayPdb}
+            minHeight={500}
+            initialChain={initialChain}
+            initialResidues={initialResidues}
+            fixedLabels={fixedLabels}
+          />
         </Suspense>
         <p className="mt-4 text-sm text-slate-600">
-          Copy or share this link to open the same structure (PDB {displayPdb}) directly:{" "}
-          <Link href={`/structure?pdb=${displayPdb}`} className="link-inline font-medium">
-            /structure?pdb={displayPdb}
+          Copy or share:{" "}
+          <Link href={shareablePath} className="link-inline font-medium">
+            {shareablePath}
           </Link>
         </p>
       </div>
