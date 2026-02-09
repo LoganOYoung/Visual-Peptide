@@ -9,11 +9,11 @@ import { StructurePageWrapper } from "@/components/StructurePageWrapper";
 import { ViewerSectionErrorBoundary } from "@/components/ViewerSectionErrorBoundary";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
-/** Load 3D viewer only on client (no backend). Catch chunk load failure so we never throw to error boundary. */
-const PdbViewerInSite = nextDynamic(
+/** Minimal 3D viewer (fewer code paths → loads more reliably). Chunk failure fallback. */
+const PdbViewerMinimal = nextDynamic(
   () =>
-    import("@/components/PdbViewerInSite")
-      .then((m) => ({ default: m.PdbViewerInSite }))
+    import("@/components/PdbViewerMinimal")
+      .then((m) => ({ default: m.PdbViewerMinimal }))
       .catch(() => ({
         default: function ViewerLoadFailed() {
           return (
@@ -164,7 +164,7 @@ export default async function StructurePage({
           </div>
         )}
         <p className="mb-4 text-sm text-slate-500 sm:text-slate-600">
-          Click residues to explore binding sites.
+          Drag to rotate, scroll to zoom. For chain selection and residue labels, use &quot;Open in RCSB&quot; below.
         </p>
         {!isDemo && peptideForPdb && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
@@ -196,13 +196,7 @@ export default async function StructurePage({
           }
         >
           <PdbStructureMetadata pdbId={displayPdb} className="mb-4" />
-          <PdbViewerInSite
-            pdbId={displayPdb}
-            minHeight={500}
-            initialChain={initialChain}
-            initialResidues={initialResidues}
-            fixedLabels={fixedLabels}
-          />
+          <PdbViewerMinimal pdbId={displayPdb} minHeight={500} />
         </ViewerSectionErrorBoundary>
         <p className="mt-4 text-sm text-slate-600">
           Copy or share:{" "}
