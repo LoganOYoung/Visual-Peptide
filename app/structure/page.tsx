@@ -1,84 +1,41 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import nextDynamic from "next/dynamic";
+import { Suspense } from "react";
 import { peptides, getPeptideByPdbId } from "@/lib/peptides";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
-import { PdbStructureMetadata } from "@/components/PdbStructureMetadata";
-import { StructurePageWrapper } from "@/components/StructurePageWrapper";
-import { ViewerSectionErrorBoundary } from "@/components/ViewerSectionErrorBoundary";
+import { PdbViewerInSite } from "@/components/PdbViewerInSite";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
-
-/** Minimal 3D viewer (fewer code paths → loads more reliably). Chunk failure fallback. */
-const PdbViewerMinimal = nextDynamic(
-  () =>
-    import("@/components/PdbViewerMinimal")
-      .then((m) => ({ default: m.PdbViewerMinimal }))
-      .catch(() => ({
-        default: function ViewerLoadFailed() {
-          return (
-            <div className="flex h-[500px] flex-col items-center justify-center gap-2 rounded-none border-2 border-slate-200 bg-slate-100 px-4 text-center">
-              <p className="text-slate-700">Viewer failed to load.</p>
-              <a href="https://www.rcsb.org/3d-view/6XBM" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">
-                Open in RCSB →
-              </a>
-            </div>
-          );
-        },
-      })),
-  { ssr: false, loading: () => <div className="h-[500px] animate-pulse rounded-none bg-slate-200" /> }
-);
 
 const structureCanonical = getCanonicalUrl("/structure");
 
-/** Uses searchParams so must be dynamic; avoid static generation at build time. */
-export const dynamic = "force-dynamic";
-
-type SearchParams = { pdb?: string; chain?: string; residues?: string; labels?: string; simple?: string };
-
-function resolveSearchParams(searchParams?: SearchParams | null): SearchParams {
-  return searchParams ?? {};
-}
-
-async function getResolvedParams(
-  searchParams?: SearchParams | Promise<SearchParams>
-): Promise<SearchParams> {
-  return searchParams instanceof Promise ? await searchParams : resolveSearchParams(searchParams);
-}
-
-export async function generateMetadata({
+export function generateMetadata({
   searchParams,
 }: {
-  searchParams?: SearchParams | Promise<SearchParams>;
-}): Promise<Metadata> {
-  try {
-    const params = await getResolvedParams(searchParams);
-    const pdb = params?.pdb?.trim().toUpperCase();
-    if (pdb) {
-      return {
-        title: `PDB ${pdb} — 3D Structure`,
-        description: `View PDB structure ${pdb} in 3D. Peptide and protein molecular viewer.`,
-        alternates: { canonical: structureCanonical },
-        openGraph: { url: structureCanonical },
-      };
-    }
+  searchParams?: { pdb?: string };
+}): Metadata {
+  const pdb = searchParams?.pdb?.trim().toUpperCase();
+  if (pdb) {
     return {
-      title: "3D Structure",
-      description: "View peptide structures in 3D. In-site viewer (no external embed).",
-      alternates: { canonical: structureCanonical },
-      openGraph: { url: structureCanonical },
-    };
-  } catch {
-    return {
-      title: "3D Structure",
-      description: "View peptide structures in 3D.",
+      title: `PDB ${pdb} — 3D Structure`,
+      description: `View PDB structure ${pdb} in 3D. Peptide and protein molecular viewer.`,
       alternates: { canonical: structureCanonical },
       openGraph: { url: structureCanonical },
     };
   }
+  return {
+    title: "3D Structure",
+    description: "View peptide structures in 3D. In-site viewer (no external embed).",
+    alternates: { canonical: structureCanonical },
+    openGraph: { url: structureCanonical },
+  };
 }
 
-/** PDB IDs for quick load; first is the default demo when no ?pdb= in URL. */
+/** Default structure shown when no ?pdb= is in the URL (demo). */
+const DEFAULT_DEMO_PDB = "6XBM";
+const DEFAULT_DEMO_LABEL = "Semaglutide (GLP-1)";
+
+/** Extra PDB IDs for testing 3D viewer (small/fast or peptide-related). */
 const TEST_PDB_IDS: { id: string; label: string }[] = [
   { id: "6XBM", label: "Semaglutide (GLP-1)" },
   { id: "1CRN", label: "Crambin (small protein)" },
@@ -94,59 +51,27 @@ const TEST_PDB_IDS: { id: string; label: string }[] = [
   { id: "7F9W", label: "GLP-1 receptor" },
 ];
 
-const DEFAULT_DEMO_PDB = TEST_PDB_IDS[0].id;
-const DEFAULT_DEMO_LABEL = TEST_PDB_IDS[0].label;
-
-function StructurePageFallback() {
-  return (
-    <div className="mx-auto max-w-2xl px-4 py-12 text-center">
-      <h1 className="text-xl font-semibold text-slate-900">3D Structure</h1>
-      <p className="mt-2 text-slate-600">The viewer failed to load. You can try again or go home.</p>
-      <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <Link href="/structure" className="btn-primary">
-          Open structure page
-        </Link>
-        <Link href="/" className="rounded-none border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-          Go home
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-export default async function StructurePage({
+export default function StructurePage({
   searchParams,
 }: {
-  searchParams?: SearchParams | Promise<SearchParams>;
+  searchParams?: { pdb?: string };
 }) {
-  try {
-    const params = await getResolvedParams(searchParams);
-    const initialPdb = params?.pdb?.trim() ?? "";
-    const initialChain = params?.chain?.trim() || null;
-    const initialResidues = params?.residues?.trim() || null;
-    const fixedLabels = params?.labels?.trim() || null;
-    const withPdb = peptides.filter((p) => p.pdbId);
-    const peptideForPdb = initialPdb ? getPeptideByPdbId(initialPdb) : undefined;
-    const isDemo = !initialPdb;
-    const displayPdb = initialPdb || DEFAULT_DEMO_PDB;
+  const initialPdb = searchParams?.pdb?.trim() ?? "";
+  const withPdb = peptides.filter((p) => p.pdbId);
+  const peptideForPdb = initialPdb ? getPeptideByPdbId(initialPdb) : undefined;
+  const isDemo = !initialPdb;
+  const displayPdb = initialPdb || DEFAULT_DEMO_PDB;
 
-    const shareableParams = new URLSearchParams({ pdb: displayPdb });
-    if (initialChain) shareableParams.set("chain", initialChain);
-    if (initialResidues) shareableParams.set("residues", initialResidues);
-    if (fixedLabels) shareableParams.set("labels", fixedLabels);
-    const shareablePath = `/structure?${shareableParams.toString()}`;
+  const quickLoadIds = [
+    ...withPdb.map((p) => ({ id: p.pdbId!, label: p.name })),
+    ...TEST_PDB_IDS.filter((t) => !withPdb.some((p) => p.pdbId === t.id)),
+  ];
 
-    const quickLoadIds = [
-      ...withPdb.map((p) => ({ id: p.pdbId!, label: p.name })),
-      ...TEST_PDB_IDS.filter((t) => !withPdb.some((p) => p.pdbId === t.id)),
-    ];
-
-    return (
-    <StructurePageWrapper>
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-12">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} baseUrl={getBaseUrl()} />
-      <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">3D Structure Viewer</h1>
-      <p className="mt-2 text-sm text-slate-600 sm:text-base">
+      <h1 className="mt-2 text-3xl font-bold text-slate-900">3D Structure Viewer</h1>
+      <p className="mt-2 text-slate-600">
         View peptide and protein structures from the PDB. Drag to rotate, scroll to zoom.
       </p>
       <p className="mt-1 text-sm text-slate-500">
@@ -154,7 +79,7 @@ export default async function StructurePage({
       </p>
 
       {/* Viewer first: see the 3D, then change structure */}
-      <div className="mt-6 sm:mt-8">
+      <div className="mt-8">
         {isDemo && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
             <span className="rounded-none bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700">Demo</span>
@@ -163,9 +88,6 @@ export default async function StructurePage({
             </span>
           </div>
         )}
-        <p className="mb-4 text-sm text-slate-500 sm:text-slate-600">
-          Drag to rotate, scroll to zoom. For chain selection and residue labels, use &quot;Open in RCSB&quot; below.
-        </p>
         {!isDemo && peptideForPdb && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
             <span className="text-slate-700">This structure is <strong className="text-slate-900">{peptideForPdb.name}</strong></span>
@@ -185,29 +107,19 @@ export default async function StructurePage({
             </Link>
           </div>
         )}
-        <ViewerSectionErrorBoundary
-          fallback={
-            <div className="flex h-[500px] flex-col items-center justify-center gap-2 rounded-none border-2 border-slate-200 bg-slate-100 px-4 text-center">
-              <p className="text-slate-700">Viewer failed to load.</p>
-              <a href={`https://www.rcsb.org/3d-view/${displayPdb}`} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">
-                Open in RCSB →
-              </a>
-            </div>
-          }
-        >
-          <PdbStructureMetadata pdbId={displayPdb} className="mb-4" />
-          <PdbViewerMinimal pdbId={displayPdb} minHeight={500} />
-        </ViewerSectionErrorBoundary>
+        <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>
+          <PdbViewerInSite pdbId={displayPdb} minHeight={500} />
+        </Suspense>
         <p className="mt-4 text-sm text-slate-600">
-          Copy or share:{" "}
-          <Link href={shareablePath} className="link-inline font-medium">
-            {shareablePath}
+          Copy or share this link to open the same structure (PDB {displayPdb}) directly:{" "}
+          <Link href={`/structure?pdb=${displayPdb}`} className="link-inline font-medium">
+            /structure?pdb={displayPdb}
           </Link>
         </p>
       </div>
 
       {/* Single card: load by ID or pick from list */}
-      <div className="card mt-6 sm:mt-8">
+      <div className="card mt-8">
         <h2 className="text-lg font-semibold text-slate-900">Load or pick a structure</h2>
         <p className="mt-1 text-sm text-slate-600">
           Enter a PDB ID or click one below to load in the viewer above.
@@ -240,10 +152,5 @@ export default async function StructurePage({
         . Not all peptides have a public 3D structure; small peptides may be under different IDs or in other databases.
       </p>
     </div>
-    </StructurePageWrapper>
-    );
-  } catch (err) {
-    console.error("Structure page server error:", err);
-    return <StructurePageFallback />;
-  }
+  );
 }

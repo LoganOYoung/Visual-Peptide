@@ -29,7 +29,18 @@ npm run build
 
 无报错即表示可在 Vercel 上正常构建。本站无 API 路由、无服务端运行时依赖，Vercel 会以 Next.js 静态/增量静态方式托管。
 
+## 环境变量（可选）
+
+在 Vercel → Project → Settings → Environment Variables 中可配置：
+
+| 变量 | 说明 |
+|------|------|
+| `SITE_URL` | 正式站域名，如 `https://www.visualpeptide.com`。用于 sitemap、canonical、Open Graph 的 base URL。 |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Google Analytics 4 的 Measurement ID（如 `G-QZMMP7M9Q2`）。配置后全站加载 gtag，用于访问统计。 |
+
+不配置也可正常部署；不设 `NEXT_PUBLIC_GA_MEASUREMENT_ID` 则不加载 GA。
+
 ## 技术说明
 
 - **无后端**：未使用 `app/api/`、未连接数据库、未在服务端请求第三方 API；计算器与肽数据均在客户端或构建时完成。
-- **无环境变量**：无需配置 `.env` 即可部署（若将来接入表单提交等，可使用 Vercel 环境变量或第三方无后端方案如 Formspree）。
+- **可选环境变量**：见上表；若不配置，sitemap 使用 VERCEL_URL，且无 GA 统计。

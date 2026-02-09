@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+const CDN_3DMOL_PRIMARY = "https://3Dmol.org/build/3Dmol-min.js";
+const CDN_3DMOL_FALLBACK = "https://cdn.jsdelivr.net/npm/3dmol@2.5.4/build/3Dmol-min.js";
 const RCSB_PDB = "https://files.rcsb.org/view";
 
 type ViewerInstance = {
@@ -95,6 +97,12 @@ export function TrajectoryViewer({
     let cancelled = false;
     const el = containerRef.current;
     if (!el) return;
+
+    const get3Dmol = (): ThreeDmolLib | undefined => {
+      if (typeof window === "undefined") return undefined;
+      const w = window as unknown as { $3Dmol?: ThreeDmolLib; "3Dmol"?: ThreeDmolLib };
+      return w.$3Dmol ?? w["3Dmol"];
+    };
 
     const loadFrames = (): Promise<{ texts: string[]; combined: string }> => {
       if (usePrecomputed && framePdbTexts?.length) {
@@ -199,23 +207,45 @@ export function TrajectoryViewer({
         });
     };
 
-    (async () => {
-      try {
-        const mod = await import("3dmol");
-        const lib = (mod.default ?? mod) as unknown as ThreeDmolLib;
+    if (typeof window !== "undefined" && get3Dmol()) {
+      run(get3Dmol()!);
+      return () => {
+        cancelled = true;
+        if (viewerRef.current?.pauseAnimate) viewerRef.current.pauseAnimate();
+        if (viewerRef.current?.destroy) viewerRef.current.destroy();
+        viewerRef.current = null;
+      };
+    }
+
+    const script = document.createElement("script");
+    script.src = CDN_3DMOL_PRIMARY;
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    script.onload = () => {
+      if (cancelled) return;
+      const lib = get3Dmol();
+      if (lib) run(lib);
+      else setError("3D library failed to load");
+    };
+    script.onerror = () => {
+      const fallback = document.createElement("script");
+      fallback.src = CDN_3DMOL_FALLBACK;
+      fallback.async = true;
+      fallback.crossOrigin = "anonymous";
+      fallback.onload = () => {
         if (cancelled) return;
-        if (!lib?.createViewer) {
-          setError("3D viewer library missing createViewer");
-          return;
-        }
-        run(lib);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Could not load 3D viewer");
-      }
-    })();
+        const lib = get3Dmol();
+        if (lib) run(lib);
+        else setError("3D library failed to load");
+      };
+      fallback.onerror = () => setError("Could not load 3D viewer");
+      document.body.appendChild(fallback);
+    };
+    document.body.appendChild(script);
 
     return () => {
       cancelled = true;
+      document.querySelectorAll(`script[src="${CDN_3DMOL_PRIMARY}"], script[src="${CDN_3DMOL_FALLBACK}"]`).forEach((s) => s.remove());
       if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
       if (viewerRef.current?.pauseAnimate) viewerRef.current.pauseAnimate();
       if (viewerRef.current?.destroy) viewerRef.current.destroy();
