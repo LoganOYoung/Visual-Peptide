@@ -419,6 +419,14 @@ export function PdbViewerInSite({
     if (!v?.pngURI) return;
     setExporting(true);
     try {
+      let prevBg: unknown, prevAlpha: unknown;
+      if (typeof v.getConfig === "function" && typeof v.setConfig === "function") {
+        const cfg = v.getConfig();
+        prevBg = cfg?.backgroundColor;
+        prevAlpha = cfg?.backgroundAlpha;
+        v.setConfig({ backgroundColor: "transparent", backgroundAlpha: 0 });
+      }
+      v.render?.();
       const dataUri = v.pngURI();
       if (dataUri) {
         const a = document.createElement("a");
@@ -426,6 +434,10 @@ export function PdbViewerInSite({
         a.download = `pdb-${id}.png`;
         a.click();
       }
+      if (typeof v.setConfig === "function" && (prevBg != null || prevAlpha != null)) {
+        v.setConfig({ backgroundColor: prevBg ?? "0xf1f5f9", backgroundAlpha: prevAlpha ?? 1 });
+      }
+      v.render?.();
     } finally {
       setExporting(false);
     }
@@ -458,7 +470,8 @@ export function PdbViewerInSite({
     (r: ResidueInfo | null) =>
       r?.resi != null && r?.chain != null && r?.resn != null
         ? getHotspotAnnotation(id, r.resi, r.chain, r.resn)
-        : null
+        : null,
+    [id]
   );
   const hoverHotspot = hoverResidue ? hotspotFor(hoverResidue) : null;
   const selectedHotspot = selectedResidue ? hotspotFor(selectedResidue) : null;
@@ -469,14 +482,14 @@ export function PdbViewerInSite({
       className={`overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate ${className}`}
       style={{ contain: "layout" }}
     >
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2 flex-wrap gap-2">
-        <span className="text-sm font-medium text-slate-700">
+      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2 sm:px-4 flex-wrap gap-2 min-h-[44px] sm:min-h-0">
+        <span className="text-sm font-medium text-slate-700 truncate">
           {title ?? `PDB ${id} — 3D Structure`}
         </span>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
           <Link
             href="/verify"
-            className="text-xs text-slate-600 hover:text-slate-900"
+            className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center sm:inline text-xs text-slate-600 hover:text-slate-900 py-2 sm:py-0"
             aria-label="Verify batch / Purity & Verify"
           >
             Verify
@@ -485,7 +498,7 @@ export function PdbViewerInSite({
             href={src}
             target="_blank"
             rel="noopener noreferrer"
-            className="link-inline text-xs"
+            className="link-inline min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center sm:inline text-xs py-2 sm:py-0"
             aria-label="Open in RCSB (new tab)"
           >
             Open in RCSB →
@@ -494,7 +507,11 @@ export function PdbViewerInSite({
       </div>
 
       <div className="flex flex-col sm:flex-row gap-0">
-        <div className="relative flex-1" style={{ minHeight: `${minHeight}px` }}>
+        <div
+          className="relative flex-1"
+          style={{ minHeight: `${minHeight}px`, touchAction: "none" }}
+          aria-label="3D structure; one finger to rotate, two to zoom"
+        >
           {!loaded && !error && (
             <div
               className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"
@@ -535,6 +552,9 @@ export function PdbViewerInSite({
               Distance: {measureDistance.toFixed(2)} Å
             </div>
           )}
+          <div className="sm:hidden absolute bottom-2 right-2 z-10 text-[10px] text-slate-400 pointer-events-none">
+            One finger rotate · Two finger zoom
+          </div>
           <div
             ref={containerRef}
             className="w-full bg-slate-100"
@@ -542,7 +562,7 @@ export function PdbViewerInSite({
           />
         </div>
 
-        <div className="w-full sm:w-64 border-t sm:border-t-0 sm:border-l border-slate-200 bg-white flex-shrink-0 flex flex-col max-h-[70vh] overflow-y-auto">
+        <div className="w-full sm:w-64 border-t sm:border-t-0 sm:border-l border-slate-200 bg-white flex-shrink-0 flex flex-col max-h-[70vh] overflow-y-auto overflow-x-hidden pb-[env(safe-area-inset-bottom,0)]">
             {/* Display & color */}
             <div className="border-b border-slate-200 px-3 py-2">
               <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Display</p>
@@ -550,7 +570,7 @@ export function PdbViewerInSite({
                 <select
                   value={displayStyle}
                   onChange={(e) => setDisplayStyle(e.target.value as DisplayStyle)}
-                  className="rounded border border-slate-300 text-sm"
+                  className="min-h-[44px] sm:min-h-[32px] rounded border border-slate-300 text-sm pl-2 pr-6 py-1.5 sm:py-1"
                 >
                   <option value="cartoon">Cartoon (Ribbon)</option>
                   <option value="stick">Stick</option>
@@ -560,7 +580,7 @@ export function PdbViewerInSite({
                 <select
                   value={colorScheme}
                   onChange={(e) => setColorScheme(e.target.value as ColorScheme)}
-                  className="rounded border border-slate-300 text-sm"
+                  className="min-h-[44px] sm:min-h-[32px] rounded border border-slate-300 text-sm pl-2 pr-6 py-1.5 sm:py-1"
                 >
                   <option value="spectrum">Spectrum</option>
                   <option value="chain">By chain</option>
@@ -571,16 +591,16 @@ export function PdbViewerInSite({
             {/* Measure */}
             <div className="border-b border-slate-200 px-3 py-2">
               <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Measure</p>
-              <div className="mt-1 flex gap-2">
+              <div className="mt-1 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => { setMeasureMode((m) => !m); resetMeasure(); }}
-                  className={`text-sm px-2 py-1 rounded ${measureMode ? "bg-amber-200" : "bg-slate-100 hover:bg-slate-200"}`}
+                  className={`min-h-[44px] sm:min-h-[32px] text-sm px-3 py-2 sm:py-1 rounded ${measureMode ? "bg-amber-200" : "bg-slate-100 hover:bg-slate-200"}`}
                 >
                   {measureMode ? "Cancel" : "Distance"}
                 </button>
                 {(measureMode || measureAtoms.length > 0) && (
-                  <button type="button" onClick={resetMeasure} className="text-sm px-2 py-1 rounded bg-slate-100 hover:bg-slate-200">
+                  <button type="button" onClick={resetMeasure} className="min-h-[44px] sm:min-h-[32px] text-sm px-3 py-2 sm:py-1 rounded bg-slate-100 hover:bg-slate-200">
                     Reset
                   </button>
                 )}
@@ -590,12 +610,12 @@ export function PdbViewerInSite({
             {/* Surface */}
             <div className="border-b border-slate-200 px-3 py-2">
               <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Surface</p>
-              <label className="mt-1 inline-flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+              <label className="mt-1 min-h-[44px] sm:min-h-0 inline-flex items-center gap-2 cursor-pointer text-sm text-slate-700 py-2 sm:py-0">
                 <input
                   type="checkbox"
                   checked={showHydrophobicitySurface}
                   onChange={(e) => setShowHydrophobicitySurface(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded border-slate-300 w-4 h-4"
                 />
                 <span>Hydrophobicity (red/blue)</span>
               </label>
@@ -609,11 +629,11 @@ export function PdbViewerInSite({
                   type="button"
                   onClick={exportPng}
                   disabled={!loaded || exporting}
-                  className="text-sm px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                  className="min-h-[44px] sm:min-h-[32px] text-sm px-3 py-2 sm:py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
                 >
                   {exporting ? "…" : "Export PNG"}
                 </button>
-                <button type="button" onClick={focusAll} className="text-sm px-2 py-1 rounded bg-slate-100 hover:bg-slate-200">
+                <button type="button" onClick={focusAll} className="min-h-[44px] sm:min-h-[32px] text-sm px-3 py-2 sm:py-1 rounded bg-slate-100 hover:bg-slate-200">
                   Focus all
                 </button>
                 {chains.map((ch) => (
@@ -621,7 +641,7 @@ export function PdbViewerInSite({
                     key={ch}
                     type="button"
                     onClick={() => focusChain(ch)}
-                    className="text-sm px-2 py-1 rounded bg-slate-100 hover:bg-slate-200"
+                    className="min-h-[44px] sm:min-h-[32px] text-sm px-3 py-2 sm:py-1 rounded bg-slate-100 hover:bg-slate-200"
                   >
                     Focus {ch}
                   </button>
@@ -635,12 +655,12 @@ export function PdbViewerInSite({
                 <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Chains</p>
                 <div className="mt-1.5 flex flex-wrap gap-2">
                   {chains.map((ch) => (
-                    <label key={ch} className="inline-flex items-center gap-1.5 cursor-pointer text-sm text-slate-700">
+                    <label key={ch} className="min-h-[44px] sm:min-h-0 inline-flex items-center gap-2 cursor-pointer text-sm text-slate-700 py-2 sm:py-0">
                       <input
                         type="checkbox"
                         checked={chainVisibility[ch] !== false}
                         onChange={() => toggleChain(ch)}
-                        className="rounded border-slate-300"
+                        className="rounded border-slate-300 w-4 h-4 shrink-0"
                       />
                       <span>Chain {ch}</span>
                     </label>
@@ -667,7 +687,7 @@ export function PdbViewerInSite({
                               key={`${chainId}-${i}-${res?.resi}`}
                               type="button"
                               onClick={() => res && centerResidue(chainId, res.resi)}
-                              className={`min-w-[1.25rem] py-0.5 ${isSelected ? "bg-teal-200 ring-1 ring-teal-400" : "hover:bg-slate-200"}`}
+                              className={`min-w-[2rem] min-h-[44px] sm:min-w-[1.25rem] sm:min-h-[28px] py-1 sm:py-0.5 inline-flex items-center justify-center ${isSelected ? "bg-teal-200 ring-1 ring-teal-400" : "hover:bg-slate-200"}`}
                               title={`${res?.resn ?? ""} ${res?.resi ?? i + 1}`}
                             >
                               {letter}

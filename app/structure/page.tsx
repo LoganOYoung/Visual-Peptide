@@ -78,10 +78,10 @@ export default function StructurePage({
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} baseUrl={getBaseUrl()} />
-      <h1 className="mt-2 text-3xl font-bold text-slate-900">3D Structure Viewer</h1>
-      <p className="mt-2 text-slate-600">
+      <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">3D Structure Viewer</h1>
+      <p className="mt-2 text-sm text-slate-600 sm:text-base">
         View peptide and protein structures from the PDB. Drag to rotate, scroll to zoom.
       </p>
       <p className="mt-1 text-sm text-slate-500">
@@ -89,7 +89,7 @@ export default function StructurePage({
       </p>
 
       {/* Viewer first: see the 3D, then change structure */}
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         {isDemo && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
             <span className="rounded-none bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700">Demo</span>
@@ -98,6 +98,9 @@ export default function StructurePage({
             </span>
           </div>
         )}
+        <p className="mb-4 text-sm text-slate-500 sm:text-slate-600">
+          Click residues to explore binding sites.
+        </p>
         {!isDemo && peptideForPdb && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
             <span className="text-slate-700">This structure is <strong className="text-slate-900">{peptideForPdb.name}</strong></span>
@@ -136,7 +139,7 @@ export default function StructurePage({
       </div>
 
       {/* Single card: load by ID or pick from list */}
-      <div className="card mt-8">
+      <div className="card mt-6 sm:mt-8">
         <h2 className="text-lg font-semibold text-slate-900">Load or pick a structure</h2>
         <p className="mt-1 text-sm text-slate-600">
           Enter a PDB ID or click one below to load in the viewer above.

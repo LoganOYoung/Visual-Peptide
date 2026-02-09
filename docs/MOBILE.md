@@ -34,6 +34,12 @@
 - **prefers-reduced-motion**：在 `globals.css` 中降低动画/过渡时长，并关闭平滑滚动。
 - **焦点环**：按钮与链接使用 `focus-visible:ring-2` 等，键盘与焦点可见。
 
+### 6. 3D Structure Viewer 多设备
+- **布局**：小屏 `flex-col`（3D 在上、侧栏在下），大屏 `sm:flex-row`（侧栏在右）；侧栏 `max-h-[70vh] overflow-y-auto`，小屏可滚动。
+- **触摸目标**：顶栏 Verify/Open in RCSB 为 `min-h-[44px] min-w-[44px]`（小屏）；侧栏下拉、按钮、链勾选、序列字母在小屏为 `min-h-[44px]` 或 `min-w-[2rem] min-h-[44px]`，桌面端恢复紧凑。
+- **3D 区域**：`touchAction: "none"` 交给 3Dmol 处理单指旋转/双指缩放；小屏右下角文案「One finger rotate · Two finger zoom」。
+- **安全区**：侧栏底部 `pb-[env(safe-area-inset-bottom,0)]`，避免被设备横条遮挡。
+
 ## 维护建议
 - 新增按钮、链接、表单项时尽量沿用 `.btn-primary`、`.btn-secondary`、`.input`，或显式加 `min-h-[44px]`。
 - 新增固定/粘性头尾时考虑 `env(safe-area-inset-*)`。
