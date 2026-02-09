@@ -5,6 +5,7 @@ import { peptides, getPeptideByPdbId } from "@/lib/peptides";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
 import { PdbStructureMetadata } from "@/components/PdbStructureMetadata";
+import { StructurePageWrapper } from "@/components/StructurePageWrapper";
 import { ViewerSectionErrorBoundary } from "@/components/ViewerSectionErrorBoundary";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
@@ -141,6 +142,7 @@ export default async function StructurePage({
     ];
 
     return (
+    <StructurePageWrapper>
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">3D Structure Viewer</h1>
@@ -244,6 +246,7 @@ export default async function StructurePage({
         . Not all peptides have a public 3D structure; small peptides may be under different IDs or in other databases.
       </p>
     </div>
+    </StructurePageWrapper>
     );
   } catch (err) {
     console.error("Structure page server error:", err);
