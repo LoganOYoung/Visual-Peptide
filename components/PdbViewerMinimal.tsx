@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const RCSB_3D_VIEW = "https://www.rcsb.org/3d-view";
 
@@ -42,10 +42,16 @@ export function PdbViewerMinimal({
   className = "",
 }: PdbViewerMinimalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const loadedSuccessRef = useRef(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const id = (pdbId ?? "").toString().trim().toUpperCase() || "6XBM";
+
+  const setErrorSafe = useCallback((msg: string) => {
+    if (loadedSuccessRef.current) return;
+    setError(msg);
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -62,7 +68,7 @@ export function PdbViewerMinimal({
       } catch {
         if (!cancelled) {
           resolvedRef.current = true;
-          setError("Failed to create viewer");
+          setErrorSafe("Failed to create viewer");
         }
         return;
       }
@@ -80,26 +86,27 @@ export function PdbViewerMinimal({
             viewer.render();
             if (!cancelled) {
               resolvedRef.current = true;
+              loadedSuccessRef.current = true;
               setLoaded(true);
             }
           } catch (e) {
             if (!cancelled) {
               resolvedRef.current = true;
-              setError(e instanceof Error ? e.message : "Load failed");
+              setErrorSafe(e instanceof Error ? e.message : "Load failed");
             }
           }
         })
         .catch((e) => {
           if (!cancelled) {
             resolvedRef.current = true;
-            setError(e instanceof Error ? e.message : "Load failed");
+            setErrorSafe(e instanceof Error ? e.message : "Load failed");
           }
         });
     };
 
     const timeoutId = window.setTimeout(() => {
       if (!cancelled && !resolvedRef.current) {
-        setError('Load timed out. Try "Open in RCSB" below.');
+        setErrorSafe('Load timed out. Try "Open in RCSB" below.');
       }
     }, 20000);
 
@@ -107,7 +114,7 @@ export function PdbViewerMinimal({
       if (cancelled || urlIndex >= CDN_3DMOL_URLS.length) {
         if (!cancelled) {
           resolvedRef.current = true;
-          setError('Could not load 3D viewer. Try "Open in RCSB" below.');
+          setErrorSafe('Could not load 3D viewer. Try "Open in RCSB" below.');
         }
         return;
       }
@@ -150,13 +157,22 @@ export function PdbViewerMinimal({
 
     return () => {
       cancelled = true;
+      loadedSuccessRef.current = false;
       window.clearTimeout(timeoutId);
-      CDN_3DMOL_URLS.forEach((u) => {
-        document.querySelectorAll(`script[src="${u}"]`).forEach((s) => s.remove());
-      });
-      if (viewer?.destroy) viewer.destroy();
+      try {
+        CDN_3DMOL_URLS.forEach((u) => {
+          document.querySelectorAll(`script[src="${u}"]`).forEach((s) => s.remove());
+        });
+      } catch {
+        // ignore
+      }
+      try {
+        if (viewer?.destroy) viewer.destroy();
+      } catch {
+        // destroy() can throw (e.g. WebGL context lost); avoid triggering error boundary
+      }
     };
-  }, [id]);
+  }, [id, setErrorSafe]);
 
   if (error) {
     return (
