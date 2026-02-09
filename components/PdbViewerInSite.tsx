@@ -1,32 +1,51 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const RCSB_3D_VIEW = "https://www.rcsb.org/3d-view";
-// Viewer-only build (no RCSB UI). Try official first, fallback to jsDelivr.
 const CDN_3DMOL_PRIMARY = "https://3Dmol.org/build/3Dmol-min.js";
 const CDN_3DMOL_FALLBACK = "https://cdn.jsdelivr.net/npm/3dmol@2.5.4/build/3Dmol-min.js";
 
 type ViewerInstance = {
   addModel: (data: string, format: string) => void;
-  setStyle: (a: object, b: object) => void;
-  zoomTo: () => void;
+  setStyle: (sel: object, style: object) => void;
+  zoomTo: (sel?: object, duration?: number) => void;
   render: () => void;
+  getUniqueValues?: (attr: string, sel: object) => string[];
+  addSurface?: (type: number, style: object, atomsel?: object, allsel?: object) => Promise<unknown>;
+  removeAllSurfaces?: () => void;
+  getModel?: () => { getUniqueValues?: (attr: string) => string[] };
   destroy?: () => void;
 };
 declare global {
   interface Window {
-    $3Dmol?: { createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance };
+    $3Dmol?: {
+      createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance;
+      SurfaceType?: { VDW: number; SAS: number; MS: number; SES: number };
+      Gradient?: { RWB: (min: number, max: number, mid?: number) => { range: [number, number]; color: (v: number) => { r: number; g: number; b: number } } };
+    };
     "3Dmol"?: { createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance };
   }
 }
+
+export type ColorMode = "spectrum" | "chain";
+export type ViewerState = { chain?: string; residues?: string; labels?: string };
 
 interface PdbViewerInSiteProps {
   pdbId: string;
   title?: string;
   minHeight?: number;
   className?: string;
+  /** Initial chain to focus (from URL). */
+  initialChain?: string;
+  /** Callback when user changes focus chain (for reproducible URL). */
+  onStateChange?: (state: ViewerState) => void;
+}
+
+function get3Dmol(): Window["$3Dmol"] {
+  if (typeof window === "undefined") return undefined;
+  return window.$3Dmol ?? (window as unknown as { "3Dmol": Window["$3Dmol"] })["3Dmol"];
 }
 
 export function PdbViewerInSite({
@@ -34,13 +53,61 @@ export function PdbViewerInSite({
   title,
   minHeight = 400,
   className = "",
+  initialChain,
+  onStateChange,
 }: PdbViewerInSiteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<ViewerInstance | null>(null);
   const resolvedRef = useRef(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chains, setChains] = useState<string[]>([]);
+  const [colorMode, setColorMode] = useState<ColorMode>("spectrum");
+  const [surfaceOn, setSurfaceOn] = useState(false);
   const id = pdbId.trim().toUpperCase();
   const src = `${RCSB_3D_VIEW}/${id}`;
+
+  const applyStyleAndSurface = useCallback(() => {
+    const v = viewerRef.current;
+    const lib = get3Dmol();
+    if (!v || !lib) return;
+    if (colorMode === "spectrum") {
+      v.setStyle({}, { cartoon: { color: "spectrum" } });
+    } else {
+      v.setStyle({}, { cartoon: { colorscheme: "chain" } });
+    }
+    if (v.removeAllSurfaces) v.removeAllSurfaces();
+    if (surfaceOn && v.addSurface && lib.SurfaceType != null) {
+      const st = lib.SurfaceType.SAS ?? lib.SurfaceType.VDW;
+      const scheme = lib.Gradient?.RWB ? { colorscheme: { gradient: "rwb" as const, prop: "b" as const, min: 0, max: 100 } } : { opacity: 0.8 };
+      v.addSurface(st, scheme, {}, {}).then(() => v.render());
+    }
+    v.render();
+  }, [colorMode, surfaceOn]);
+
+  useEffect(() => {
+    if (!loaded || !viewerRef.current) return;
+    applyStyleAndSurface();
+  }, [loaded, applyStyleAndSurface]);
+
+  useEffect(() => {
+    if (!loaded || !initialChain || !viewerRef.current) return;
+    viewerRef.current.zoomTo({ chain: initialChain }, 400);
+    viewerRef.current.render();
+  }, [loaded, initialChain]);
+
+  const focusView = useCallback((chain?: string) => {
+    const v = viewerRef.current;
+    if (!v) return;
+    if (chain) {
+      v.zoomTo({ chain }, 400);
+      onStateChange?.({ chain });
+    } else {
+      v.zoomTo({}, 400);
+      onStateChange?.({});
+    }
+    v.render();
+  }, [onStateChange]);
 
   useEffect(() => {
     if (!id) return;
@@ -48,14 +115,10 @@ export function PdbViewerInSite({
     if (!container) return;
 
     resolvedRef.current = false;
+    viewerRef.current = null;
     let viewer: ViewerInstance | null = null;
     let cancelled = false;
     const el = containerRef.current;
-
-    const get3Dmol = (): Window["$3Dmol"] => {
-      if (typeof window === "undefined") return undefined;
-      return window.$3Dmol ?? (window as any)["3Dmol"];
-    };
 
     const run = ($3Dmol: NonNullable<Window["$3Dmol"]>) => {
       if (cancelled || !el) return;
@@ -76,12 +139,19 @@ export function PdbViewerInSite({
         .then((pdbText) => {
           if (cancelled || !viewer) return;
           viewer.addModel(pdbText, "pdb");
+          const chainList = typeof viewer.getUniqueValues === "function" ? viewer.getUniqueValues("chain", {}) : null;
+          const chainIds = Array.isArray(chainList) ? chainList : [];
+          if (!cancelled) {
+            viewerRef.current = viewer;
+            setChains(chainIds.length ? chainIds : []);
+            setLoaded(true);
+          }
           viewer.setStyle({}, { cartoon: { color: "spectrum" } });
           viewer.zoomTo();
           viewer.render();
-          if (!cancelled) {
-            resolvedRef.current = true;
-            setLoaded(true);
+          if (initialChain && chainIds.includes(initialChain)) {
+            viewer.zoomTo({ chain: initialChain }, 0);
+            viewer.render();
           }
         })
         .catch((e) => {
@@ -97,7 +167,8 @@ export function PdbViewerInSite({
       run(lib);
       return () => {
         cancelled = true;
-        if (viewer && typeof viewer.destroy === "function") viewer.destroy();
+        viewerRef.current = null;
+        if (viewer?.destroy) viewer.destroy();
       };
     }
 
@@ -131,13 +202,14 @@ export function PdbViewerInSite({
       document.body.appendChild(script);
       return script;
     };
-    const script = tryLoad(CDN_3DMOL_PRIMARY);
+    tryLoad(CDN_3DMOL_PRIMARY);
 
     return () => {
       cancelled = true;
       window.clearTimeout(timeoutId);
       document.querySelectorAll(`script[src="${CDN_3DMOL_PRIMARY}"], script[src="${CDN_3DMOL_FALLBACK}"]`).forEach((s) => s.remove());
-      if (viewer && typeof viewer.destroy === "function") viewer.destroy();
+      viewerRef.current = null;
+      if (viewer?.destroy) viewer.destroy();
     };
   }, [id]);
 
@@ -147,19 +219,59 @@ export function PdbViewerInSite({
       className={`overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate ${className}`}
       style={{ contain: "layout" }}
     >
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 py-2">
         <span className="text-sm font-medium text-slate-700">
           {title ?? `PDB ${id} — 3D Structure`}
         </span>
-        <Link
-          href={src}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-inline text-xs"
-          aria-label="Open structure in RCSB (new tab)"
-        >
-          Open in RCSB →
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          {loaded && (
+            <>
+              <span className="text-xs text-slate-500">Color:</span>
+              <select
+                value={colorMode}
+                onChange={(e) => setColorMode(e.target.value as ColorMode)}
+                className="rounded-none border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                aria-label="Coloring mode"
+              >
+                <option value="spectrum">Spectrum</option>
+                <option value="chain">By chain</option>
+              </select>
+              <span className="text-xs text-slate-500">View:</span>
+              <select
+                key={id}
+                defaultValue=""
+                onChange={(e) => focusView(e.target.value || undefined)}
+                className="rounded-none border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                aria-label="Preset view"
+              >
+                <option value="">Focus all</option>
+                {chains.map((ch) => (
+                  <option key={ch} value={ch}>Focus {ch}</option>
+                ))}
+              </select>
+              <label className="flex items-center gap-1.5 text-xs text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={surfaceOn}
+                  onChange={(e) => setSurfaceOn(e.target.checked)}
+                  className="rounded border-slate-300"
+                  aria-label="Hydrophobic surface"
+                />
+                Surface
+              </label>
+            </>
+          )}
+          <Link href="/verify" className="link-inline text-xs" aria-label="Batch verify">Verify</Link>
+          <Link
+            href={src}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-inline text-xs"
+            aria-label="Open structure in RCSB (new tab)"
+          >
+            Open in RCSB →
+          </Link>
+        </div>
       </div>
       <div className="relative w-full" style={{ minHeight: `${minHeight}px` }}>
         {!loaded && !error && (
