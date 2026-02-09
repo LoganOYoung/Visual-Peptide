@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { peptides, getPeptideByPdbId } from "@/lib/peptides";
+import { getStructureRationale } from "@/lib/structureRationale";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
 import { PdbViewerInSite } from "@/components/PdbViewerInSite";
@@ -67,15 +68,18 @@ export default function StructurePage({
     ...TEST_PDB_IDS.filter((t) => !withPdb.some((p) => p.pdbId === t.id)),
   ];
 
+  const structureRationale = getStructureRationale(displayPdb);
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">3D Structure Viewer</h1>
       <p className="mt-2 text-slate-600">
-        View peptide and protein structures from the PDB. Drag to rotate, scroll to zoom.
+        从肽段选择、结构查看，到剂量计算与复溶——一站完成，无需在数据库和计算器之间切换。
       </p>
       <p className="mt-1 text-sm text-slate-500">
-        For multi-frame trajectories: <Link href="/structure/demo" className="link-inline">3D reaction demo</Link>
+        View PDB structures in-page. Drag to rotate, scroll to zoom.{" "}
+        <Link href="/structure/demo" className="link-inline">Multi-frame demo</Link>
       </p>
 
       {/* Viewer first: see the 3D, then change structure */}
@@ -89,22 +93,41 @@ export default function StructurePage({
           </div>
         )}
         {!isDemo && peptideForPdb && (
-          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
-            <span className="text-slate-700">This structure is <strong className="text-slate-900">{peptideForPdb.name}</strong></span>
-            <Link href={`/tools/calculator?peptide=${peptideForPdb.slug}`} className="btn-primary text-sm">
-              Open calculator
-            </Link>
-            <Link href={`/peptides/${peptideForPdb.slug}`} className="link-inline text-sm">
-              Peptide detail →
-            </Link>
+          <div className="mb-4 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-slate-700">当前结构对应肽段 <strong className="text-slate-900">{peptideForPdb.name}</strong></span>
+              <Link href={`/tools/calculator?peptide=${peptideForPdb.slug}`} className="btn-primary text-sm">
+                剂量计算
+              </Link>
+              <Link href={`/peptides/${peptideForPdb.slug}`} className="btn-secondary text-sm">
+                肽段详情
+              </Link>
+              <Link href="/verify" className="rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                验证报告
+              </Link>
+            </div>
+            {structureRationale && (
+              <p className="mt-2 text-sm text-slate-600">
+                <span className="font-medium text-slate-700">为何选此结构：</span>
+                {structureRationale}
+              </p>
+            )}
           </div>
         )}
         {!isDemo && initialPdb && !peptideForPdb && (
-          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-none border border-slate-200 bg-slate-50 px-4 py-3">
-            <span className="text-slate-700">PDB <strong className="text-slate-900">{initialPdb}</strong></span>
-            <Link href={`https://www.rcsb.org/3d-view/${initialPdb}`} target="_blank" rel="noopener noreferrer" className="link-inline text-sm" aria-label="Open RCSB 3D view in new tab">
-              Open in RCSB →
-            </Link>
+          <div className="mb-4 rounded-none border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-slate-700">PDB <strong className="text-slate-900">{initialPdb}</strong></span>
+              <Link href={`https://www.rcsb.org/3d-view/${initialPdb}`} target="_blank" rel="noopener noreferrer" className="link-inline text-sm" aria-label="Open RCSB 3D view in new tab">
+                Open in RCSB →
+              </Link>
+            </div>
+            {structureRationale && (
+              <p className="mt-2 text-sm text-slate-600">
+                <span className="font-medium text-slate-700">为何选此结构：</span>
+                {structureRationale}
+              </p>
+            )}
           </div>
         )}
         <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>

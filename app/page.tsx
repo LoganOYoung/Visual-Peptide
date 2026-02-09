@@ -39,7 +39,7 @@ const TOOL_CARDS = [
   {
     href: "/structure",
     title: "3D Structure",
-    desc: "PDB-based molecular viewer. View peptide structures in 3D.",
+    desc: "从肽库或计算器直达 3D 结构，支持测距、导出与引用。",
     icon: "🧬",
   },
   {
@@ -85,7 +85,10 @@ export default function HomePage() {
             Precision without the math
           </h1>
           <p className="mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
-            From 3D structure to syringe draw — calculators, dosing, vial planning, and purity verification in one place.
+            从肽段选择、结构查看，到剂量计算与复溶——一站完成，无需在数据库和计算器之间切换。
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            From 3D structure to syringe draw: calculators, dosing, vial planning, and purity verification in one place.
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Research and education only. Not medical advice.

@@ -101,7 +101,16 @@ export function CalculatorContent() {
       </p>
       {peptide && (
         <p className="mt-1 text-sm text-teal-600">
-          Pre-filled for {peptide.name}. <Link href={`/peptides/${peptide.slug}`} className="link-inline">View details</Link>
+          Pre-filled for {peptide.name}.{" "}
+          <Link href={`/peptides/${peptide.slug}`} className="link-inline">Peptide detail</Link>
+          {peptide.pdbId && (
+            <>
+              {" · "}
+              <Link href={`/structure?pdb=${peptide.pdbId}`} className="link-inline font-medium">
+                View 3D structure (PDB {peptide.pdbId}) →
+              </Link>
+            </>
+          )}
         </p>
       )}
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getPeptideBySlug, getAllSlugs, PEPTIDE_CATEGORIES } from "@/lib/peptides";
+import { getStructureRationale } from "@/lib/structureRationale";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { MiniReconCalc } from "@/components/MiniReconCalc";
 import { PdbViewerInSite } from "@/components/PdbViewerInSite";
@@ -62,12 +63,20 @@ export default async function PeptideDetailPage({
             )}
           </div>
           {peptide.pdbId && (
-            <Link
-              href={`/structure?pdb=${peptide.pdbId}`}
-              className="btn-primary shrink-0"
-            >
-              View 3D structure (PDB {peptide.pdbId}) →
-            </Link>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <Link
+                href={`/structure?pdb=${peptide.pdbId}`}
+                className="btn-primary"
+              >
+                查看 3D 结构 (PDB {peptide.pdbId}) →
+              </Link>
+              <Link
+                href={`/tools/calculator?peptide=${peptide.slug}`}
+                className="btn-secondary"
+              >
+                剂量计算
+              </Link>
+            </div>
           )}
         </div>
       </header>
@@ -75,6 +84,12 @@ export default async function PeptideDetailPage({
       {/* 3D viewer (if PDB available) */}
       {peptide.pdbId && (
         <div className="mt-8">
+          {getStructureRationale(peptide.pdbId) && (
+            <p className="mb-3 text-sm text-slate-600">
+              <span className="font-medium text-slate-700">为何选此结构：</span>
+              {getStructureRationale(peptide.pdbId)}
+            </p>
+          )}
           <Suspense fallback={<div className="h-[400px] animate-pulse rounded-none bg-slate-100" />}>
             <PdbViewerInSite
               pdbId={peptide.pdbId}
