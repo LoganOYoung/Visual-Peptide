@@ -153,40 +153,44 @@ export function PdbViewerInSite({
 
   const applyViewerStyle = useCallback(
     (viewer: ViewerInstance, chainVis: Record<string, boolean>) => {
-      const baseStyle: Record<string, unknown> = {
-        cartoon: displayStyle === "cartoon" ? { color: colorScheme === "chain" ? "chain" : "spectrum" } : { hidden: true },
-        stick: displayStyle === "stick" ? { radius: 0.3, color: colorScheme === "chain" ? "chain" : "spectrum" } : { hidden: true },
-        line: displayStyle === "line" ? { color: colorScheme === "chain" ? "chain" : "spectrum" } : { hidden: true },
-        sphere: displayStyle === "sphere" ? { scale: 0.5, color: colorScheme === "chain" ? "chain" : "spectrum" } : { hidden: true },
-        clicksphere: {
-          scale: 1.2,
-          callback: function (this: ResidueInfo) {
-            clickCallbackRef.current(this);
-          },
-          hover_callback: function (this: ResidueInfo) {
-            setHoverResidue(
-              this?.resn != null || this?.resi != null
-                ? { resn: this.resn ?? "", resi: this.resi ?? 0, chain: this.chain ?? "" }
-                : null
-            );
-          },
-          unhover_callback: () => setHoverResidue(null),
-        } as any,
-      };
-      viewer.setStyle({}, baseStyle);
-      chains.forEach((ch) => {
-        const vis = chainVis[ch];
-        viewer.setStyle(
-          { chain: ch },
-          {
-            cartoon: { hidden: !vis },
-            line: { hidden: !vis },
-            stick: { hidden: !vis },
-            sphere: { hidden: !vis },
-          }
-        );
-      });
-      viewer.render();
+      try {
+        const baseStyle: Record<string, unknown> = {
+          cartoon: displayStyle === "cartoon" ? { color: colorScheme === "chain" ? "chain" : "spectrum" } : { hidden: true },
+          stick: displayStyle === "stick" ? { radius: 0.3, color: colorScheme === "chain" ? "chain" : "spectrum" } : { hidden: true },
+          line: displayStyle === "line" ? { color: colorScheme === "chain" ? "chain" : "spectrum" } : { hidden: true },
+          sphere: displayStyle === "sphere" ? { scale: 0.5, color: colorScheme === "chain" ? "chain" : "spectrum" } : { hidden: true },
+          clicksphere: {
+            scale: 1.2,
+            callback: function (this: ResidueInfo) {
+              clickCallbackRef.current(this);
+            },
+            hover_callback: function (this: ResidueInfo) {
+              setHoverResidue(
+                this?.resn != null || this?.resi != null
+                  ? { resn: this.resn ?? "", resi: this.resi ?? 0, chain: this.chain ?? "" }
+                  : null
+              );
+            },
+            unhover_callback: () => setHoverResidue(null),
+          } as any,
+        };
+        viewer.setStyle({}, baseStyle);
+        chains.forEach((ch) => {
+          const vis = chainVis[ch];
+          viewer.setStyle(
+            { chain: ch },
+            {
+              cartoon: { hidden: !vis },
+              line: { hidden: !vis },
+              stick: { hidden: !vis },
+              sphere: { hidden: !vis },
+            }
+          );
+        });
+        viewer.render();
+      } catch {
+        // 3Dmol may throw on style; avoid bubbling to error boundary
+      }
     },
     [displayStyle, colorScheme, chains]
   );
@@ -224,77 +228,84 @@ export function PdbViewerInSite({
         })
         .then((pdbText) => {
           if (cancelled || !viewer) return;
-          pdbTextRef.current = pdbText;
-          viewer.addModel(pdbText, "pdb");
+          try {
+            pdbTextRef.current = pdbText;
+            viewer.addModel(pdbText, "pdb");
 
-          const chainList = getChainsFromPdb(pdbText);
-          const seqs = getSequenceFromPdb(pdbText);
-          if (!cancelled) {
-            setChains(chainList);
-            setSequences(seqs);
-            const vis: Record<string, boolean> = {};
-            if (initialChain) {
-              chainList.forEach((ch) => (vis[ch] = ch === initialChain));
-            } else {
-              chainList.forEach((ch) => (vis[ch] = true));
+            const chainList = getChainsFromPdb(pdbText);
+            const seqs = getSequenceFromPdb(pdbText);
+            if (!cancelled) {
+              setChains(chainList);
+              setSequences(seqs);
+              const vis: Record<string, boolean> = {};
+              if (initialChain) {
+                chainList.forEach((ch) => (vis[ch] = ch === initialChain));
+              } else {
+                chainList.forEach((ch) => (vis[ch] = true));
+              }
+              setChainVisibility(vis);
+              onChainsLoadedRef.current?.(chainList);
             }
-            setChainVisibility(vis);
-            onChainsLoadedRef.current?.(chainList);
-          }
 
-          const baseStyle: Record<string, unknown> = {
-            cartoon: { color: "spectrum" },
-            stick: { hidden: true },
-            line: { hidden: true },
-            sphere: { hidden: true },
-            clicksphere: {
-              scale: 1.2,
-              callback: function (this: ResidueInfo) {
-                clickCallbackRef.current(this);
-              },
-              hover_callback: function (this: ResidueInfo) {
-                setHoverResidue(
-                  this?.resn != null || this?.resi != null
-                    ? { resn: this.resn ?? "", resi: this.resi ?? 0, chain: this.chain ?? "" }
-                    : null
-                );
-              },
-              unhover_callback: () => setHoverResidue(null),
-            } as any,
-          };
-          viewer.setStyle({}, baseStyle);
-          chainList.forEach((ch) => {
-            const visible = initialChain ? ch === initialChain : true;
-            viewer!.setStyle(
-              { chain: ch },
-              { cartoon: { hidden: !visible }, line: { hidden: !visible }, stick: { hidden: !visible }, sphere: { hidden: !visible } }
-            );
-          });
-
-          if (initialResidues && initialChain) {
-            const resList = parseResidueRange(initialResidues);
-            if (resList.length && typeof (viewer as any).addStyle === "function") {
-              (viewer as any).addStyle(
-                { chain: initialChain, resi: resList },
-                { stick: { radius: 0.4, color: "yellow" } }
+            const baseStyle: Record<string, unknown> = {
+              cartoon: { color: "spectrum" },
+              stick: { hidden: true },
+              line: { hidden: true },
+              sphere: { hidden: true },
+              clicksphere: {
+                scale: 1.2,
+                callback: function (this: ResidueInfo) {
+                  clickCallbackRef.current(this);
+                },
+                hover_callback: function (this: ResidueInfo) {
+                  setHoverResidue(
+                    this?.resn != null || this?.resi != null
+                      ? { resn: this.resn ?? "", resi: this.resi ?? 0, chain: this.chain ?? "" }
+                      : null
+                  );
+                },
+                unhover_callback: () => setHoverResidue(null),
+              } as any,
+            };
+            viewer.setStyle({}, baseStyle);
+            chainList.forEach((ch) => {
+              const visible = initialChain ? ch === initialChain : true;
+              viewer!.setStyle(
+                { chain: ch },
+                { cartoon: { hidden: !visible }, line: { hidden: !visible }, stick: { hidden: !visible }, sphere: { hidden: !visible } }
               );
-            }
-          }
+            });
 
-          const labels = fixedLabels ? parseLabelSpec(fixedLabels) : [];
-          labels.forEach(({ resi, chain: ch }) => {
-            if (typeof (viewer as any).addLabel === "function") {
-              (viewer as any).addLabel(`${resi}`, { fontColor: "black", backgroundColor: "white", backgroundOpacity: 0.8 }, { chain: ch, resi }, true);
+            if (initialResidues && initialChain) {
+              const resList = parseResidueRange(initialResidues);
+              if (resList.length && typeof (viewer as any).addStyle === "function") {
+                (viewer as any).addStyle(
+                  { chain: initialChain, resi: resList },
+                  { stick: { radius: 0.4, color: "yellow" } }
+                );
+              }
             }
-          });
-          if (labels.length) viewer.render();
 
-          viewer.zoomTo(initialChain ? { chain: initialChain } : undefined);
-          viewer.render();
-          viewerRef.current = viewer;
-          if (!cancelled) {
-            resolvedRef.current = true;
-            setLoaded(true);
+            const labels = fixedLabels ? parseLabelSpec(fixedLabels) : [];
+            labels.forEach(({ resi, chain: ch }) => {
+              if (typeof (viewer as any).addLabel === "function") {
+                (viewer as any).addLabel(`${resi}`, { fontColor: "black", backgroundColor: "white", backgroundOpacity: 0.8 }, { chain: ch, resi }, true);
+              }
+            });
+            if (labels.length) viewer.render();
+
+            viewer.zoomTo(initialChain ? { chain: initialChain } : undefined);
+            viewer.render();
+            viewerRef.current = viewer;
+            if (!cancelled) {
+              resolvedRef.current = true;
+              setLoaded(true);
+            }
+          } catch (e) {
+            if (!cancelled) {
+              resolvedRef.current = true;
+              setError(e instanceof Error ? e.message : "Load failed");
+            }
           }
         })
         .catch((e) => {
@@ -326,11 +337,18 @@ export function PdbViewerInSite({
       script.crossOrigin = "anonymous";
       script.onload = () => {
         if (cancelled) return;
-        const libAfter = get3Dmol();
-        if (libAfter) run(libAfter);
-        else if (!cancelled) {
-          resolvedRef.current = true;
-          setError('3D library failed to load. Try "Open in RCSB" below.');
+        try {
+          const libAfter = get3Dmol();
+          if (libAfter) run(libAfter);
+          else if (!cancelled) {
+            resolvedRef.current = true;
+            setError('3D library failed to load. Try "Open in RCSB" below.');
+          }
+        } catch (e) {
+          if (!cancelled) {
+            resolvedRef.current = true;
+            setError(e instanceof Error ? e.message : "Viewer init failed");
+          }
         }
       };
       script.onerror = () => {
@@ -362,30 +380,34 @@ export function PdbViewerInSite({
   }, [displayStyle, colorScheme, loaded, chainVisibility, chains.length, applyViewerStyle]);
 
   useEffect(() => {
-    const v = viewerRef.current as any;
-    const $3Dmol = typeof window !== "undefined" ? (window.$3Dmol ?? (window as any)["3Dmol"]) : null;
-    if (!loaded || !v || !$3Dmol) return;
-    if (showHydrophobicitySurface) {
-      const surfType = $3Dmol.SurfaceType?.SAS ?? "SAS";
-      const style: Record<string, unknown> = { opacity: 0.75 };
-      if ($3Dmol.Gradient?.RWB) style.map = { prop: "partialCharge", scheme: new $3Dmol.Gradient.RWB(-0.5, 0.5) };
-      const addSurf = v.addSurface?.bind(v);
-      if (typeof addSurf === "function") {
-        const p = addSurf(surfType, style, {}, {}, undefined, () => {});
-        if (typeof p?.then === "function") {
-          p.then((sid: number) => { surfaceIdRef.current = sid; v.render(); }).catch(() => {});
-        } else if (typeof p === "number") {
-          surfaceIdRef.current = p;
+    try {
+      const v = viewerRef.current as any;
+      const $3Dmol = typeof window !== "undefined" ? (window.$3Dmol ?? (window as any)["3Dmol"]) : null;
+      if (!loaded || !v || !$3Dmol) return;
+      if (showHydrophobicitySurface) {
+        const surfType = $3Dmol.SurfaceType?.SAS ?? "SAS";
+        const style: Record<string, unknown> = { opacity: 0.75 };
+        if ($3Dmol.Gradient?.RWB) style.map = { prop: "partialCharge", scheme: new $3Dmol.Gradient.RWB(-0.5, 0.5) };
+        const addSurf = v.addSurface?.bind(v);
+        if (typeof addSurf === "function") {
+          const p = addSurf(surfType, style, {}, {}, undefined, () => {});
+          if (typeof p?.then === "function") {
+            p.then((sid: number) => { surfaceIdRef.current = sid; v.render(); }).catch(() => {});
+          } else if (typeof p === "number") {
+            surfaceIdRef.current = p;
+            v.render();
+          }
+        }
+      } else {
+        const sid = surfaceIdRef.current;
+        if (sid != null && typeof v.removeSurface === "function") {
+          v.removeSurface(sid);
+          surfaceIdRef.current = null;
           v.render();
         }
       }
-    } else {
-      const sid = surfaceIdRef.current;
-      if (sid != null && typeof v.removeSurface === "function") {
-        v.removeSurface(sid);
-        surfaceIdRef.current = null;
-        v.render();
-      }
+    } catch {
+      // Surface/3Dmol may throw; avoid bubbling to error boundary
     }
   }, [loaded, showHydrophobicitySurface]);
 

@@ -7,9 +7,23 @@ import { PdbOpener } from "@/components/PdbOpener";
 import { PdbStructureMetadata } from "@/components/PdbStructureMetadata";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
-/** Load 3D viewer only on client to avoid SSR/hydration or browser-only deps (e.g. 3Dmol) breaking production. */
+/** Load 3D viewer only on client (no backend). Catch chunk load failure so we never throw to error boundary. */
 const PdbViewerInSite = nextDynamic(
-  () => import("@/components/PdbViewerInSite").then((m) => ({ default: m.PdbViewerInSite })),
+  () =>
+    import("@/components/PdbViewerInSite")
+      .then((m) => ({ default: m.PdbViewerInSite }))
+      .catch(() => ({
+        default: function ViewerLoadFailed() {
+          return (
+            <div className="flex h-[500px] flex-col items-center justify-center gap-2 rounded-none border-2 border-slate-200 bg-slate-100 px-4 text-center">
+              <p className="text-slate-700">Viewer failed to load.</p>
+              <a href="https://www.rcsb.org/3d-view/6XBM" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">
+                Open in RCSB →
+              </a>
+            </div>
+          );
+        },
+      })),
   { ssr: false, loading: () => <div className="h-[500px] animate-pulse rounded-none bg-slate-200" /> }
 );
 
