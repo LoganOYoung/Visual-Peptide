@@ -12,7 +12,21 @@ import { getHotspotAnnotation } from "@/lib/hotspotAnnotations";
 
 const RCSB_3D_VIEW = "https://www.rcsb.org/3d-view";
 
-/** 3Dmol library (from npm package 3dmol); minimal type for createViewer + optional surface/gradient. */
+/** CDN fallback when npm import("3dmol") fails (e.g. in some production/Edge environments). */
+const CDN_3DMOL_URLS = [
+  "https://cdn.jsdelivr.net/npm/3dmol@2.5.4/build/3Dmol-min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.5.3/3Dmol-min.js",
+  "https://3Dmol.org/build/3Dmol-min.js",
+];
+
+declare global {
+  interface Window {
+    $3Dmol?: ThreeDmolLib;
+    "3Dmol"?: ThreeDmolLib;
+  }
+}
+
+/** 3Dmol library (from npm package 3dmol or window after CDN load); minimal type for createViewer + optional surface/gradient. */
 type ThreeDmolLib = {
   createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance;
   SurfaceType?: { SAS?: unknown };
@@ -315,23 +329,57 @@ export function PdbViewerInSite({
       if (!cancelled && !resolvedRef.current) setError('Load timed out. Try "Open in RCSB" below.');
     }, 25000);
 
+    const get3DmolFromWindow = (): ThreeDmolLib | undefined => {
+      if (typeof window === "undefined") return undefined;
+      return window.$3Dmol ?? window["3Dmol"];
+    };
+
+    const tryLoadFromCDN = (urlIndex: number) => {
+      if (cancelled || urlIndex >= CDN_3DMOL_URLS.length) {
+        if (!cancelled) {
+          resolvedRef.current = true;
+          setError("Could not load 3D viewer. Try \"Open in RCSB\" below.");
+        }
+        return;
+      }
+      const scriptUrl = CDN_3DMOL_URLS[urlIndex];
+      const script = document.createElement("script");
+      script.src = scriptUrl;
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      script.onload = () => {
+        if (cancelled) return;
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (cancelled) return;
+            const lib = get3DmolFromWindow();
+            if (lib?.createViewer) {
+              libRef.current = lib;
+              run(lib);
+            } else tryLoadFromCDN(urlIndex + 1);
+          }, 0);
+        });
+      };
+      script.onerror = () => {
+        if (cancelled) return;
+        tryLoadFromCDN(urlIndex + 1);
+      };
+      document.body.appendChild(script);
+    };
+
     (async () => {
       try {
         const mod = await import("3dmol");
         const lib = (mod.default ?? mod) as unknown as ThreeDmolLib;
         if (cancelled) return;
         if (!lib?.createViewer) {
-          resolvedRef.current = true;
-          setError("3D viewer library missing createViewer");
+          tryLoadFromCDN(0);
           return;
         }
         libRef.current = lib;
         run(lib);
-      } catch (e) {
-        if (!cancelled) {
-          resolvedRef.current = true;
-          setError(e instanceof Error ? e.message : "Could not load 3D viewer");
-        }
+      } catch {
+        if (!cancelled) tryLoadFromCDN(0);
       }
     })();
 
@@ -340,6 +388,9 @@ export function PdbViewerInSite({
       viewerRef.current = null;
       libRef.current = null;
       window.clearTimeout(timeoutId);
+      CDN_3DMOL_URLS.forEach((u) => {
+        document.querySelectorAll(`script[src="${u}"]`).forEach((s) => s.remove());
+      });
       if (viewer && typeof viewer.destroy === "function") viewer.destroy();
     };
   }, [id, setResidueFromAtom, initialChain, initialResidues, fixedLabels]);
