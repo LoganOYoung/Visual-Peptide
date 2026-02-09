@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { peptides, getPeptideByPdbId } from "@/lib/peptides";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
-import { StructureViewerWithUrl } from "@/components/StructureViewerWithUrl";
+import { PdbViewerInSite } from "@/components/PdbViewerInSite";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
 const structureCanonical = getCanonicalUrl("/structure");
@@ -108,8 +108,14 @@ export default function StructurePage({
           </div>
         )}
         <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>
-          <StructureViewerWithUrl displayPdb={displayPdb} minHeight={500} />
+          <PdbViewerInSite pdbId={displayPdb} minHeight={500} />
         </Suspense>
+        <p className="mt-4 text-sm text-slate-600">
+          Copy or share this link to open the same structure (PDB {displayPdb}) directly:{" "}
+          <Link href={`/structure?pdb=${displayPdb}`} className="link-inline font-medium">
+            /structure?pdb={displayPdb}
+          </Link>
+        </p>
       </div>
 
       {/* Single card: load by ID or pick from list */}
