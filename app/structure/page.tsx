@@ -5,6 +5,7 @@ import { peptides, getPeptideByPdbId } from "@/lib/peptides";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
 import { PdbStructureMetadata } from "@/components/PdbStructureMetadata";
+import { ViewerSectionErrorBoundary } from "@/components/ViewerSectionErrorBoundary";
 import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 
 /** Load 3D viewer only on client (no backend). Catch chunk load failure so we never throw to error boundary. */
@@ -182,14 +183,25 @@ export default async function StructurePage({
             </Link>
           </div>
         )}
-        <PdbStructureMetadata pdbId={displayPdb} className="mb-4" />
-        <PdbViewerInSite
-          pdbId={displayPdb}
-          minHeight={500}
-          initialChain={initialChain}
-          initialResidues={initialResidues}
-          fixedLabels={fixedLabels}
-        />
+        <ViewerSectionErrorBoundary
+          fallback={
+            <div className="flex h-[500px] flex-col items-center justify-center gap-2 rounded-none border-2 border-slate-200 bg-slate-100 px-4 text-center">
+              <p className="text-slate-700">Viewer failed to load.</p>
+              <a href={`https://www.rcsb.org/3d-view/${displayPdb}`} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">
+                Open in RCSB →
+              </a>
+            </div>
+          }
+        >
+          <PdbStructureMetadata pdbId={displayPdb} className="mb-4" />
+          <PdbViewerInSite
+            pdbId={displayPdb}
+            minHeight={500}
+            initialChain={initialChain}
+            initialResidues={initialResidues}
+            fixedLabels={fixedLabels}
+          />
+        </ViewerSectionErrorBoundary>
         <p className="mt-4 text-sm text-slate-600">
           Copy or share:{" "}
           <Link href={shareablePath} className="link-inline font-medium">

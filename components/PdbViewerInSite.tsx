@@ -107,7 +107,7 @@ export function PdbViewerInSite({
   onChainsLoadedRef.current = onChainsLoaded;
   const clickCallbackRef = useRef<(atom: ResidueInfo) => void>(() => {});
 
-  const id = pdbId.trim().toUpperCase();
+  const id = (pdbId ?? "").toString().trim().toUpperCase() || "6XBM";
   const src = `${RCSB_3D_VIEW}/${id}`;
 
   const setResidueFromAtom = useCallback((atom: ResidueInfo) => {
