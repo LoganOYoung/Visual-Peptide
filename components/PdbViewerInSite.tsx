@@ -11,8 +11,13 @@ import {
 import { getHotspotAnnotation } from "@/lib/hotspotAnnotations";
 
 const RCSB_3D_VIEW = "https://www.rcsb.org/3d-view";
-const CDN_3DMOL_PRIMARY = "https://3Dmol.org/build/3Dmol-min.js";
-const CDN_3DMOL_FALLBACK = "https://cdn.jsdelivr.net/npm/3dmol@2.5.4/build/3Dmol-min.js";
+
+/** 3Dmol library (from npm package 3dmol); minimal type for createViewer + optional surface/gradient. */
+type ThreeDmolLib = {
+  createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance;
+  SurfaceType?: { SAS?: unknown };
+  Gradient?: { RWB: new (a: number, b: number) => unknown };
+};
 
 /** 3Dmol atom-like (resn, resi, chain, x, y, z). */
 export type ResidueInfo = {
@@ -40,12 +45,6 @@ type ViewerInstance = {
   addSurface?: (type: string, style: object, sel: object, allSel?: object, focus?: object, callback?: () => void) => Promise<number> | number;
   removeSurface?: (surfId: number) => void;
 };
-declare global {
-  interface Window {
-    $3Dmol?: { createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance };
-    "3Dmol"?: { createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance };
-  }
-}
 
 type DisplayStyle = "cartoon" | "stick" | "line" | "sphere";
 type ColorScheme = "spectrum" | "chain";
@@ -103,6 +102,7 @@ export function PdbViewerInSite({
   const [showHydrophobicitySurface, setShowHydrophobicitySurface] = useState(false);
   const surfaceIdRef = useRef<number | null>(null);
   const viewerRef = useRef<ViewerInstance | null>(null);
+  const libRef = useRef<ThreeDmolLib | null>(null);
   const onChainsLoadedRef = useRef(onChainsLoaded);
   onChainsLoadedRef.current = onChainsLoaded;
   const clickCallbackRef = useRef<(atom: ResidueInfo) => void>(() => {});
@@ -205,15 +205,10 @@ export function PdbViewerInSite({
     let cancelled = false;
     const el = containerRef.current;
 
-    const get3Dmol = (): Window["$3Dmol"] => {
-      if (typeof window === "undefined") return undefined;
-      return window.$3Dmol ?? (window as any)["3Dmol"];
-    };
-
-    const run = ($3Dmol: NonNullable<Window["$3Dmol"]>) => {
+    const run = (lib: ThreeDmolLib) => {
       if (cancelled || !el) return;
       try {
-        viewer = $3Dmol.createViewer(el, { backgroundColor: "0xf1f5f9" });
+        viewer = lib.createViewer(el, { backgroundColor: "0xf1f5f9" });
       } catch (e) {
         if (!cancelled) {
           resolvedRef.current = true;
@@ -316,60 +311,35 @@ export function PdbViewerInSite({
         });
     };
 
-    const lib = get3Dmol();
-    if (typeof window !== "undefined" && lib) {
-      run(lib);
-      return () => {
-        cancelled = true;
-        pdbTextRef.current = null;
-        if (viewer && typeof viewer.destroy === "function") viewer.destroy();
-      };
-    }
-
     const timeoutId = window.setTimeout(() => {
       if (!cancelled && !resolvedRef.current) setError('Load timed out. Try "Open in RCSB" below.');
-    }, 20000);
+    }, 25000);
 
-    const tryLoad = (scriptUrl: string) => {
-      const script = document.createElement("script");
-      script.src = scriptUrl;
-      script.async = true;
-      script.crossOrigin = "anonymous";
-      script.onload = () => {
+    (async () => {
+      try {
+        const mod = await import("3dmol");
+        const lib = (mod.default ?? mod) as unknown as ThreeDmolLib;
         if (cancelled) return;
-        try {
-          const libAfter = get3Dmol();
-          if (libAfter) run(libAfter);
-          else if (!cancelled) {
-            resolvedRef.current = true;
-            setError('3D library failed to load. Try "Open in RCSB" below.');
-          }
-        } catch (e) {
-          if (!cancelled) {
-            resolvedRef.current = true;
-            setError(e instanceof Error ? e.message : "Viewer init failed");
-          }
-        }
-      };
-      script.onerror = () => {
-        if (cancelled) return;
-        if (scriptUrl === CDN_3DMOL_PRIMARY) tryLoad(CDN_3DMOL_FALLBACK);
-        else {
+        if (!lib?.createViewer) {
           resolvedRef.current = true;
-          setError("Could not load 3D viewer script");
+          setError("3D viewer library missing createViewer");
+          return;
         }
-      };
-      document.body.appendChild(script);
-    };
-    tryLoad(CDN_3DMOL_PRIMARY);
+        libRef.current = lib;
+        run(lib);
+      } catch (e) {
+        if (!cancelled) {
+          resolvedRef.current = true;
+          setError(e instanceof Error ? e.message : "Could not load 3D viewer");
+        }
+      }
+    })();
 
     return () => {
       cancelled = true;
       viewerRef.current = null;
+      libRef.current = null;
       window.clearTimeout(timeoutId);
-      document
-        .querySelectorAll(`script[src="${CDN_3DMOL_PRIMARY}"], script[src="${CDN_3DMOL_FALLBACK}"]`)
-        .forEach((s) => s.remove());
       if (viewer && typeof viewer.destroy === "function") viewer.destroy();
     };
   }, [id, setResidueFromAtom, initialChain, initialResidues, fixedLabels]);
@@ -382,7 +352,7 @@ export function PdbViewerInSite({
   useEffect(() => {
     try {
       const v = viewerRef.current as any;
-      const $3Dmol = typeof window !== "undefined" ? (window.$3Dmol ?? (window as any)["3Dmol"]) : null;
+      const $3Dmol = libRef.current;
       if (!loaded || !v || !$3Dmol) return;
       if (showHydrophobicitySurface) {
         const surfType = $3Dmol.SurfaceType?.SAS ?? "SAS";
