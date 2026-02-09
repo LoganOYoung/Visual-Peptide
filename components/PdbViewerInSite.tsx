@@ -106,6 +106,7 @@ export function PdbViewerInSite({
   const [measureMode, setMeasureMode] = useState(false);
   const [measureAtoms, setMeasureAtoms] = useState<[AtomLike | null, AtomLike | null]>([null, null]);
   const [distanceÅ, setDistanceÅ] = useState<number | null>(null);
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   const id = pdbId.trim().toUpperCase();
   const src = `${RCSB_3D_VIEW}/${id}`;
@@ -400,9 +401,9 @@ export function PdbViewerInSite({
       className={`overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate ${className}`}
       style={{ contain: "layout" }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 py-2">
-        <span className="text-sm font-medium text-slate-700">
-          {title ?? `PDB ${id} — 3D Structure`}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-slate-200 bg-white px-3 py-1.5">
+        <span className="text-sm font-medium text-slate-700 shrink-0">
+          {title ?? `PDB ${id}`}
         </span>
         <div className="flex flex-wrap items-center gap-3">
           {loaded && chains.length > 0 && (
@@ -482,28 +483,38 @@ export function PdbViewerInSite({
         </div>
       )}
       {(metadata || (loaded && Object.keys(sequenceByChain).length > 0)) && (
-        <div className="border-b border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-          {metadata && (
-            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-              {metadata.title && <span className="font-medium">{metadata.title}</span>}
-              {metadata.resolution != null && <span>Resolution: {metadata.resolution} Å</span>}
-              {metadata.method && <span>Method: {metadata.method}</span>}
-              <a
-                href={downloadPdbUrl}
-                download={`${id}.pdb`}
-                className="link-inline text-teal-600"
+        <div className="border-b border-slate-200 bg-white px-4 py-2 text-sm text-slate-700">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {metadata?.title && (
+              <span className="max-w-[40ch] truncate font-medium" title={metadata.title}>
+                {metadata.title}
+              </span>
+            )}
+            {metadata?.resolution != null && (
+              <span className="text-slate-500">{metadata.resolution} Å</span>
+            )}
+            {metadata?.method && (
+              <span className="text-slate-500">{metadata.method}</span>
+            )}
+            <a href={downloadPdbUrl} download={`${id}.pdb`} className="link-inline text-xs text-teal-600">
+              Download PDB
+            </a>
+            <button type="button" onClick={copyCite} className="rounded bg-slate-100 px-1.5 py-0.5 text-xs hover:bg-slate-200">
+              Copy Cite
+            </button>
+            {loaded && chains.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setDetailsExpanded((e) => !e)}
+                className="flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 hover:bg-slate-200"
               >
-                Download PDB
-              </a>
-              <button type="button" onClick={copyCite} className="rounded bg-slate-100 px-2 py-0.5 text-xs hover:bg-slate-200">
-                Copy Cite
+                序列 ↔ 3D {detailsExpanded ? "▼" : "▶"}
               </button>
-            </div>
-          )}
-          {loaded && chains.length > 0 && (
-            <div>
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">序列 ↔ 3D</span>
-              <div className="mt-2 flex flex-wrap gap-2">
+            )}
+          </div>
+          {detailsExpanded && loaded && chains.length > 0 && (
+            <div className="mt-3 max-h-48 overflow-y-auto border-t border-slate-100 pt-3">
+              <div className="flex flex-wrap gap-2">
                 {chains.map((ch) => {
                   const seq = sequenceByChain[ch];
                   if (!seq?.length) return null;
