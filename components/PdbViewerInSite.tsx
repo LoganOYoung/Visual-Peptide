@@ -145,8 +145,8 @@ export function PdbViewerInSite({
 
   useEffect(() => {
     if (!id) return;
-    const container = containerRef.current;
-    if (!container) return;
+    const el = containerRef.current;
+    if (!el) return;
 
     resolvedRef.current = false;
     setResidueInfo(null);
@@ -158,7 +158,6 @@ export function PdbViewerInSite({
     setDistanceÅ(null);
     let viewer: ViewerInstance | null = null;
     let cancelled = false;
-    const el = containerRef.current;
 
     const get3Dmol = (): Window["$3Dmol"] => {
       if (typeof window === "undefined") return undefined;

@@ -11,13 +11,15 @@ export type HotspotEntry = {
 
 const HOTSPOTS: Record<string, HotspotEntry[]> = {
   "6XBM": [
-    { key: "A:8", label: "His7", description: "N-terminal histidine; may affect receptor recognition." },
-    { key: "A:12", label: "Tyr12", description: "Conserved in GLP-1; important for GLP-1R binding." },
-    { key: "A:16", label: "Glu16", description: "Stabilizes α-helix; contributes to potency." },
+    { key: "A:8", label: "His7", description: "N-terminal histidine; receptor recognition; relevant for dose/activity." },
+    { key: "A:12", label: "Tyr12", description: "Conserved in GLP-1; key for GLP-1R binding and potency." },
+    { key: "A:16", label: "Glu16", description: "Stabilizes α-helix; contributes to potency and half-life." },
+    { key: "A:26", label: "Lys26", description: "Fatty acid modification site in Semaglutide; extends half-life." },
+    { key: "A:37", label: "C-term", description: "C-terminal region; receptor engagement and signaling." },
   ],
   "7F9W": [
-    { key: "A:1", label: "ECD", description: "Extracellular domain; peptide binding region." },
-    { key: "B:1", label: "GLP-1", description: "GLP-1 peptide ligand in complex." },
+    { key: "A:1", label: "ECD", description: "Receptor extracellular domain; where peptide binds." },
+    { key: "B:1", label: "GLP-1", description: "GLP-1 peptide ligand; compare with 6XBM for peptide-focused view." },
   ],
 };
 

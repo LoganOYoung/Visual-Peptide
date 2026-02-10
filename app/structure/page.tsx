@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { peptides, getPeptideByPdbId } from "@/lib/peptides";
 import { getStructureRationale } from "@/lib/structureRationale";
+import { getStructureAlternatives } from "@/lib/structureAlternatives";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PdbOpener } from "@/components/PdbOpener";
 import { PdbViewerInSite } from "@/components/PdbViewerInSite";
@@ -58,17 +59,14 @@ export default function StructurePage({
   searchParams?: { pdb?: string };
 }) {
   const initialPdb = searchParams?.pdb?.trim() ?? "";
-  const withPdb = peptides.filter((p) => p.pdbId);
   const peptideForPdb = initialPdb ? getPeptideByPdbId(initialPdb) : undefined;
   const isDemo = !initialPdb;
   const displayPdb = initialPdb || DEFAULT_DEMO_PDB;
 
-  const quickLoadIds = [
-    ...withPdb.map((p) => ({ id: p.pdbId!, label: p.name })),
-    ...TEST_PDB_IDS.filter((t) => !withPdb.some((p) => p.pdbId === t.id)),
-  ];
-
   const structureRationale = getStructureRationale(displayPdb);
+  const alternatives = getStructureAlternatives(displayPdb);
+  const withPdbList = peptides.filter((p) => p.pdbId);
+  const otherPdbList = TEST_PDB_IDS.filter((t) => !withPdbList.some((p) => p.pdbId === t.id));
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
@@ -78,7 +76,7 @@ export default function StructurePage({
         From peptide choice and structure view to dosing and reconstitution—all in one place, without switching between databases and calculators.
       </p>
       <p className="mt-1 text-sm text-slate-500">
-        View PDB structures in-page. Drag to rotate, scroll to zoom.{" "}
+        Start from a peptide below or enter any PDB ID. Structures load here—no need to leave the site. Drag to rotate, scroll to zoom.{" "}
         <Link href="/structure/demo" className="link-inline">Multi-frame demo</Link>
       </p>
 
@@ -94,7 +92,8 @@ export default function StructurePage({
         )}
         {!isDemo && peptideForPdb && (
           <div className="mb-4 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
-            <div className="flex flex-wrap items-center gap-3">
+            <p className="text-xs font-medium uppercase tracking-wider text-teal-700">Your workflow: structure → dose → detail → verify</p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
               <span className="text-slate-700">This structure is <strong className="text-slate-900">{peptideForPdb.name}</strong></span>
               <Link href={`/tools/calculator?peptide=${peptideForPdb.slug}`} className="btn-primary text-sm">
                 Dosing calculator
@@ -106,10 +105,23 @@ export default function StructurePage({
                 Purity & Verify
               </Link>
             </div>
-            {structureRationale && (
+            <div className="mt-3">
+              <span className="text-sm font-medium text-slate-700">Why this structure</span>
+              <p className="mt-0.5 text-sm text-slate-600">
+                {structureRationale ?? "—"}
+              </p>
+            </div>
+            {alternatives.length > 0 && (
               <p className="mt-2 text-sm text-slate-600">
-                <span className="font-medium text-slate-700">Why this structure: </span>
-                {structureRationale}
+                <span className="font-medium text-slate-700">Also useful: </span>
+                {alternatives.map((alt, i) => (
+                  <span key={alt.pdbId}>
+                    {i > 0 && "; "}
+                    <Link href={`/structure?pdb=${alt.pdbId}`} className="link-inline font-medium">{alt.pdbId}</Link>
+                    {alt.label && ` (${alt.label})`}
+                    {" — "}{alt.reason}
+                  </span>
+                ))}
               </p>
             )}
           </div>
@@ -122,11 +134,28 @@ export default function StructurePage({
                 Open in RCSB →
               </Link>
             </div>
-            {structureRationale && (
-              <p className="mt-2 text-sm text-slate-600">
-                <span className="font-medium text-slate-700">Why this structure: </span>
-                {structureRationale}
-              </p>
+            {(structureRationale || alternatives.length > 0) && (
+              <div className="mt-3">
+                {structureRationale && (
+                  <>
+                    <span className="text-sm font-medium text-slate-700">Why this structure</span>
+                    <p className="mt-0.5 text-sm text-slate-600">{structureRationale}</p>
+                  </>
+                )}
+                {alternatives.length > 0 && (
+                  <p className="mt-2 text-sm text-slate-600">
+                    <span className="font-medium text-slate-700">Also useful: </span>
+                    {alternatives.map((alt, i) => (
+                      <span key={alt.pdbId}>
+                        {i > 0 && "; "}
+                        <Link href={`/structure?pdb=${alt.pdbId}`} className="link-inline font-medium">{alt.pdbId}</Link>
+                        {alt.label && ` (${alt.label})`}
+                        {" — "}{alt.reason}
+                      </span>
+                    ))}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -141,26 +170,47 @@ export default function StructurePage({
         </p>
       </div>
 
-      {/* Single card: load by ID or pick from list */}
+      {/* Load by ID or pick: peptides with 3D first, then other structures */}
       <div className="card mt-8">
         <h2 className="text-lg font-semibold text-slate-900">Load or pick a structure</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Enter a PDB ID or click one below to load in the viewer above.
+          Enter a PDB ID or pick a peptide below to view its 3D structure in the viewer above.
         </p>
         <PdbOpener initialPdb={initialPdb} />
-        <p className="mt-4 text-xs font-medium uppercase tracking-wider text-slate-500">Quick load</p>
-        <ul className="mt-2 flex flex-wrap gap-2">
-          {quickLoadIds.map(({ id, label }) => (
-            <li key={id}>
-              <Link
-                href={`/structure?pdb=${id}`}
-                className="inline-block rounded-none border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition hover:border-teal-400 hover:bg-teal-50 hover:text-slate-900"
-              >
-                {id} — {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {withPdbList.length > 0 && (
+          <>
+            <p className="mt-4 text-xs font-medium uppercase tracking-wider text-teal-600">Peptides with 3D structure</p>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {withPdbList.map((p) => (
+                <li key={p.pdbId!}>
+                  <Link
+                    href={`/structure?pdb=${p.pdbId}`}
+                    className="inline-block rounded-none border border-teal-200 bg-teal-50/50 px-3 py-2 text-sm font-medium text-teal-800 transition hover:border-teal-400 hover:bg-teal-100"
+                  >
+                    {p.pdbId} — {p.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {otherPdbList.length > 0 && (
+          <>
+            <p className="mt-4 text-xs font-medium uppercase tracking-wider text-slate-500">Other structures</p>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {otherPdbList.map(({ id, label }) => (
+                <li key={id}>
+                  <Link
+                    href={`/structure?pdb=${id}`}
+                    className="inline-block rounded-none border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition hover:border-teal-400 hover:bg-teal-50 hover:text-slate-900"
+                  >
+                    {id} — {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
 
       <p className="mt-4 text-sm text-slate-500">
@@ -168,10 +218,12 @@ export default function StructurePage({
       </p>
 
       <p className="mt-6 text-sm text-slate-500">
-        Data from RCSB PDB. For research and education.{" "}
+        Data from RCSB PDB. For research and education. All viewing is in-site—no redirect.{" "}
         <Link href="/peptides" className="link-inline">Peptide Library</Link>
         {" · "}
         <Link href="/tools/calculator" className="link-inline">Calculator</Link>
+        {" · "}
+        <Link href="/verify" className="link-inline">Purity & Verify</Link>
         . Not all peptides have a public 3D structure; small peptides may be under different IDs or in other databases.
       </p>
     </div>
