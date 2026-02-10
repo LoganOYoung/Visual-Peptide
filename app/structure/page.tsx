@@ -75,10 +75,7 @@ export default function StructurePage({
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">3D Structure Viewer</h1>
       <p className="mt-2 text-slate-600">
-        From peptide choice and structure view to dosing and reconstitution—all in one place, without switching between databases and calculators.
-      </p>
-      <p className="mt-1 text-sm text-slate-500">
-        Start from a peptide below or enter any PDB ID. Structures load here—no need to leave the site. Drag to rotate, scroll to zoom.{" "}
+        View structures in-site—no redirect. Enter a PDB ID or pick a peptide below; drag to rotate, scroll to zoom.{" "}
         <Link href="/structure/demo" className="link-inline">Multi-frame demo</Link>
       </p>
 
@@ -161,7 +158,13 @@ export default function StructurePage({
             )}
           </div>
         )}
-        <details className="group mb-4 rounded-none border border-slate-200 bg-slate-50/80">
+        <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>
+          <PdbViewerInSite pdbId={displayPdb} minHeight={500} />
+        </Suspense>
+        <p className="mt-4 text-sm text-slate-600">
+          Copy this structure’s URL to share: <CopyStructureLink pdbId={displayPdb} />
+        </p>
+        <details id="how-to-use" className="group mt-6 rounded-none border border-slate-200 bg-slate-50/80">
           <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-700 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
             <span className="inline-flex items-center gap-2">
               <span aria-hidden className="inline-block transition-transform group-open:rotate-90">▸</span>
@@ -171,27 +174,15 @@ export default function StructurePage({
           <div className="border-t border-slate-200 px-4 py-3 text-sm text-slate-600">
             <ul className="list-inside list-disc space-y-1">
               <li><strong>Rotate & zoom:</strong> Drag to rotate the structure; scroll to zoom in/out.</li>
-              <li><strong>Chains:</strong> Use the checkboxes above the viewer to show or hide each chain.</li>
-              <li><strong>Display mode:</strong> Switch between cartoon, stick, line, or sphere (buttons above the viewer).</li>
-              <li><strong>Seq ↔ 3D:</strong> Open the panel to see residue numbers by chain; click a number to center the view on that residue. Hover in 3D to highlight the same residue in the panel.</li>
-              <li><strong>Hover:</strong> Move the mouse over the structure to see full residue info (structure title, PDB ID, chain, residue) in the bottom-left overlay; configured residues show a short description. The hovered residue is highlighted in red (precise region under the cursor).</li>
-              <li><strong>Measure:</strong> Turn on Measure, then click two atoms to see the distance (Å) and a red line between them.</li>
-              <li>Use <strong>Copy link</strong> below the viewer to copy this structure’s URL and share it. <strong>Export PNG</strong> saves the current view with a watermark; <strong>Download PDB</strong> and <strong>Copy Cite</strong> are in the bar above the viewer.</li>
+              <li><strong>Chains:</strong> Use the checkboxes in the viewer bar to show or hide each chain.</li>
+              <li><strong>Display mode:</strong> Switch between cartoon, stick, line, or sphere in the viewer bar.</li>
+              <li><strong>Seq ↔ 3D:</strong> In the right sidebar, open the panel to see residue numbers by chain; click a number to center the view. Hover in 3D to highlight the same residue in the panel.</li>
+              <li><strong>Hover:</strong> Move the mouse over the structure to see residue info in the bottom-left overlay; the hovered residue is highlighted in red.</li>
+              <li><strong>Measure:</strong> Turn on Measure in the bar, then click two atoms to see the distance (Å) and a red line.</li>
+              <li><strong>Share:</strong> Use <strong>Copy link</strong> above to copy this structure’s URL. <strong>Export PNG</strong>, <strong>Download PDB</strong>, and <strong>Copy Cite</strong> are in the right-hand sidebar.</li>
             </ul>
           </div>
         </details>
-        <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>
-          <PdbViewerInSite pdbId={displayPdb} minHeight={500} />
-        </Suspense>
-        <p className="mt-4 text-sm text-slate-600">
-          Copy this structure’s URL to share: <CopyStructureLink pdbId={displayPdb} />
-        </p>
-        <p className="mt-3 text-sm text-slate-600">
-          Need synthesis?{" "}
-          <Link href="/inquiry" className="link-inline font-medium">
-            Request quote / Send to synthesis lab →
-          </Link>
-        </p>
       </div>
 
       {/* Load by ID or pick: peptides with 3D first, then other structures */}

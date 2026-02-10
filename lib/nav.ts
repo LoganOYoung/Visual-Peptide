@@ -8,7 +8,6 @@ export const navLinks = [
   { href: "/peptides", label: "Peptides" },
   { href: "/structure", label: "3D Structure" },
   { href: "/verify", label: "Verify" },
-  { href: "/suppliers", label: "Suppliers" },
   { href: "/guide", label: "Guide" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },

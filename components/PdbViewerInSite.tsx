@@ -672,6 +672,12 @@ export function PdbViewerInSite({
             Seq ↔ 3D {seqPanelOpen ? "▼" : "▶"}
           </button>
         )}
+        <a
+          href="#how-to-use"
+          className="flex min-h-[44px] items-center rounded px-3 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+        >
+          How to use
+        </a>
         <Link
           href={src}
           target="_blank"

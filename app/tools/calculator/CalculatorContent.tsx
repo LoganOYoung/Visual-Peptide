@@ -271,13 +271,7 @@ export function CalculatorContent() {
         </div>
       </section>
 
-      <p className="mt-6 text-sm text-slate-600">
-        Need synthesis?{" "}
-        <Link href="/inquiry" className="link-inline font-medium">
-          Request quote / Send to synthesis lab →
-        </Link>
-      </p>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-6 text-xs text-slate-500">
         For research use only. Use sterile technique and appropriate diluent (e.g. bacteriostatic water). Always verify peptide purity via third-party testing when sourcing.
       </p>
     </div>
