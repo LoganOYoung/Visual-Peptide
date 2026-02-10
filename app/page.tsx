@@ -87,9 +87,6 @@ export default function HomePage() {
           <p className="mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
             From peptide choice and structure view to dosing and reconstitution—all in one place, without switching between databases and calculators.
           </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Calculators, dosing, vial planning, and purity verification in one place.
-          </p>
           <p className="mt-2 text-sm text-slate-500">
             Research and education only. Not medical advice.
           </p>
