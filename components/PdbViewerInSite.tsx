@@ -33,7 +33,19 @@ interface AtomLike {
   x?: number;
   y?: number;
   z?: number;
+  elem?: string;
+  b?: number;
+  serial?: number;
 }
+
+/** 3-letter residue code → full name (RCSB-style overlay) */
+const RESIDUE_NAMES: Record<string, string> = {
+  ALA: "Alanine", ARG: "Arginine", ASN: "Asparagine", ASP: "Aspartic acid", CYS: "Cysteine",
+  GLN: "Glutamine", GLU: "Glutamic acid", GLY: "Glycine", HIS: "Histidine", ILE: "Isoleucine",
+  LEU: "Leucine", LYS: "Lysine", MET: "Methionine", PHE: "Phenylalanine", PRO: "Proline",
+  SER: "Serine", THR: "Threonine", TRP: "Tryptophan", TYR: "Tyrosine", VAL: "Valine",
+  UNK: "Unknown",
+};
 declare global {
   interface Window {
     $3Dmol?: { createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance };
@@ -97,6 +109,7 @@ export function PdbViewerInSite({
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [residueInfo, setResidueInfo] = useState<{ resn: string; chain: string; resi: number } | null>(null);
+  const [hoveredAtom, setHoveredAtom] = useState<AtomLike | null>(null);
   const [hotspotText, setHotspotText] = useState<string | null>(null);
   const [chains, setChains] = useState<string[]>([]);
   const [visibleChains, setVisibleChains] = useState<Set<string>>(new Set());
@@ -118,6 +131,7 @@ export function PdbViewerInSite({
   const measureAtomsRef = useRef<[AtomLike | null, AtomLike | null]>([null, null]);
   const apiRef = useRef({
     setResidueInfo,
+    setHoveredAtom,
     setHotspotText,
     setChains,
     setVisibleChains,
@@ -131,6 +145,7 @@ export function PdbViewerInSite({
   });
   apiRef.current = {
     setResidueInfo,
+    setHoveredAtom,
     setHotspotText,
     setChains,
     setVisibleChains,
@@ -150,6 +165,7 @@ export function PdbViewerInSite({
 
     resolvedRef.current = false;
     setResidueInfo(null);
+    setHoveredAtom(null);
     setHotspotText(null);
     setChains([]);
     setVisibleChains(new Set());
@@ -222,16 +238,24 @@ export function PdbViewerInSite({
             const hotspot = getHotspotForResidue(api.id, atom.chain ?? "", atom.resi ?? 0);
             api.setHotspotText(hotspot ? `${hotspot.label}: ${hotspot.description}` : null);
           };
+          const onHover = (atom: AtomLike) => {
+            const api = apiRef.current;
+            if (api.measureMode) return;
+            api.setHoveredAtom(atom);
+            const hotspot = getHotspotForResidue(api.id, atom.chain ?? "", atom.resi ?? 0);
+            api.setHotspotText(hotspot ? `${hotspot.label}: ${hotspot.description}` : null);
+          };
+          const onUnhover = () => {
+            apiRef.current.setHoveredAtom(null);
+            apiRef.current.setHotspotText(null);
+          };
           if (typeof viewer.mapAtomProperties === "function") {
             viewer.mapAtomProperties((a: AtomLike) => {
               (a as Record<string, unknown>).clickable = true;
               (a as Record<string, unknown>).hoverable = true;
               (a as Record<string, unknown>).callback = () => onAtom(a);
-              (a as Record<string, unknown>).hover_callback = () => onAtom(a);
-              (a as Record<string, unknown>).unhover_callback = () => {
-                apiRef.current.setResidueInfo(null);
-                apiRef.current.setHotspotText(null);
-              };
+              (a as Record<string, unknown>).hover_callback = () => onHover(a);
+              (a as Record<string, unknown>).unhover_callback = onUnhover;
             }, {});
           }
           if (typeof viewer.addStyle === "function") {
@@ -331,6 +355,10 @@ export function PdbViewerInSite({
     if (!loaded || !v || chains.length === 0) return;
     const base = { color: "spectrum" as const };
     const clickSphere = { clicksphere: { radius: 0.25 } };
+    const highlightTarget =
+      hoveredAtom?.chain != null && hoveredAtom?.resi != null
+        ? { chain: hoveredAtom.chain, resi: hoveredAtom.resi }
+        : residueInfo;
     v.setStyle({}, { [displayMode]: base, ...clickSphere });
     chains.forEach((c) => {
       v.setStyle(
@@ -340,14 +368,15 @@ export function PdbViewerInSite({
           : { [displayMode]: { ...base, opacity: 0 }, ...clickSphere }
       );
     });
-    if (residueInfo && visibleChains.has(residueInfo.chain)) {
-      v.setStyle(
-        { chain: residueInfo.chain, resi: residueInfo.resi },
-        { [displayMode]: { color: "red" as const }, ...clickSphere }
-      );
+    if (highlightTarget && visibleChains.has(highlightTarget.chain)) {
+      const outlineStyle =
+        displayMode === "cartoon"
+          ? { [displayMode]: { ...base, outline: true, outlineColor: "red" as const }, ...clickSphere }
+          : { [displayMode]: { color: "red" as const }, ...clickSphere };
+      v.setStyle({ chain: highlightTarget.chain, resi: highlightTarget.resi }, outlineStyle);
     }
     v.render();
-  }, [loaded, chains, visibleChains, displayMode, residueInfo]);
+  }, [loaded, chains, visibleChains, displayMode, residueInfo, hoveredAtom]);
 
   const toggleChain = (c: string) => {
     setVisibleChains((prev) => {
@@ -557,19 +586,49 @@ export function PdbViewerInSite({
           className="w-full bg-slate-100"
           style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
         />
-        {(residueInfo || hotspotText) && loaded && (
+        {(hoveredAtom || residueInfo) && loaded && (
           <div
-            className="absolute left-3 bottom-3 z-10 max-w-[280px] rounded-lg border border-slate-300 bg-white/95 px-3 py-2 text-sm text-slate-700 shadow-md backdrop-blur-sm"
+            className="absolute left-3 bottom-3 z-10 max-w-[320px] rounded-lg border border-slate-300 bg-white/95 px-3 py-2.5 text-sm text-slate-700 shadow-md backdrop-blur-sm"
             aria-live="polite"
           >
-            {residueInfo && (
-              <div className="font-medium">
-                {residueInfo.resn} Chain {residueInfo.chain} {residueInfo.resi}
-              </div>
-            )}
-            {hotspotText && (
-              <p className="mt-1 text-slate-600 text-xs">{hotspotText}</p>
-            )}
+            {(() => {
+              const atom = hoveredAtom ?? (residueInfo ? { resn: residueInfo.resn, chain: residueInfo.chain, resi: residueInfo.resi } : null);
+              if (!atom || atom.chain == null || atom.resi == null) return null;
+              const resn = (atom.resn ?? "UNK").trim().toUpperCase();
+              const fullName = RESIDUE_NAMES[resn] ?? resn;
+              return (
+                <>
+                  <div className="font-medium text-slate-900">
+                    {fullName} ({resn})
+                  </div>
+                  <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs text-slate-600">
+                    <dt>Chain</dt>
+                    <dd className="font-mono">{atom.chain}</dd>
+                    <dt>Position</dt>
+                    <dd className="font-mono">{atom.resi}</dd>
+                    {atom.elem != null && atom.elem.trim() !== "" && (
+                      <>
+                        <dt>Element</dt>
+                        <dd className="font-mono">{atom.elem}</dd>
+                      </>
+                    )}
+                    {atom.b != null && !Number.isNaN(atom.b) && (
+                      <>
+                        <dt>B-factor</dt>
+                        <dd className="font-mono">{Number(atom.b).toFixed(1)}</dd>
+                      </>
+                    )}
+                  </dl>
+                  {(() => {
+                    const h = hoveredAtom ? hotspotText : getHotspotForResidue(id, atom.chain, atom.resi);
+                    const hotspotDisplay = typeof h === "string" ? h : h ? `${h.label}: ${h.description}` : null;
+                    return hotspotDisplay ? (
+                      <p className="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-600">{hotspotDisplay}</p>
+                    ) : null;
+                  })()}
+                </>
+              );
+            })()}
           </div>
         )}
         {seqPanelOpen && loaded && chains.length > 0 && (
@@ -607,8 +666,8 @@ export function PdbViewerInSite({
                     <div key={ch} className="flex flex-wrap items-baseline gap-0.5">
                       <span className="mr-1 text-xs font-medium text-slate-500">Chain {ch}</span>
                       {seq.map(({ resi, resn }) => {
-                        const isHighlight =
-                          residueInfo?.chain === ch && residueInfo?.resi === resi;
+                        const current = hoveredAtom?.chain != null && hoveredAtom?.resi != null ? { chain: hoveredAtom.chain, resi: hoveredAtom.resi } : residueInfo;
+                        const isHighlight = current?.chain === ch && current?.resi === resi;
                         return (
                           <button
                             key={`${ch}-${resi}`}
