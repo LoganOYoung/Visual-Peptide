@@ -32,6 +32,9 @@ export default function StructureDemoPage() {
       <p className="mt-2 text-slate-600">
         Multi-frame trajectory playback: each demo loads a sequence of PDB structures and plays them in order. Use Play/Pause and frame buttons to control playback.
       </p>
+      <p className="mt-1 text-sm text-slate-600">
+        Start above: choose <strong>Preset</strong> and run, or enter your own PDB IDs / file URL / Morph pair; the viewer appears below after load.
+      </p>
       <p className="mt-1 text-sm text-slate-500">
         <Link href="/structure" className="link-inline">
           Single structure viewer
@@ -58,9 +61,9 @@ export default function StructureDemoPage() {
       </div>
 
       <section id="preset-demos" className="mt-12 scroll-mt-24">
-      <h2 className="text-xl font-semibold text-slate-900">Preset demos</h2>
+      <h2 className="text-xl font-semibold text-slate-900">More preset demos</h2>
       <p className="mt-1 text-sm text-slate-600">
-        Pre-built examples to show playback. Click <strong>Play</strong> in each card. For real binding or MD trajectories, use the loader above with your own PDB IDs or multi-MODEL file.
+        Standalone examples (separate from the Star product loader above). Click <strong>Play</strong> in each card. For your own pathway or MD trajectory, use the loader above (By PDB IDs or By file URL).
       </p>
       <div className="mt-6 space-y-12">
         {trajectoryDemos.map((demo) => (

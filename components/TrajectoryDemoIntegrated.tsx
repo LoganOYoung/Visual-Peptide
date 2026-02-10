@@ -47,6 +47,7 @@ export function TrajectoryDemoIntegrated() {
   const [morphA, setMorphA] = useState("");
   const [morphB, setMorphB] = useState("");
   const [loaded, setLoaded] = useState<LoadedState | null>(null);
+  const [loading, setLoading] = useState(false);
   const [morphError, setMorphError] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "fail">("idle");
 
@@ -105,16 +106,20 @@ export function TrajectoryDemoIntegrated() {
         .map((s) => s.trim().toUpperCase())
         .filter(Boolean);
       if (ids.length > 0) {
+        setLoading(true);
         const state: LoadedState = { framePdbIds: ids };
         setLoaded(state);
         updateUrl(state);
+        setLoading(false);
       }
     } else if (sourceTab === "pdbUrl") {
       const url = pdbUrlInput.trim();
       if (url) {
+        setLoading(true);
         const state: LoadedState = { pdbUrl: url };
         setLoaded(state);
         updateUrl(state);
+        setLoading(false);
       }
     } else if (sourceTab === "morph") {
       const a = morphA.trim().toUpperCase();
@@ -124,6 +129,7 @@ export function TrajectoryDemoIntegrated() {
         return;
       }
       setMorphError(null);
+      setLoading(true);
       Promise.all([
         fetch(`${RCSB_PDB}/${a}.pdb`).then((r) => (r.ok ? r.text() : Promise.reject(new Error(`${a} failed`)))),
         fetch(`${RCSB_PDB}/${b}.pdb`).then((r) => (r.ok ? r.text() : Promise.reject(new Error(`${b} failed`)))),
@@ -133,7 +139,8 @@ export function TrajectoryDemoIntegrated() {
           setLoaded({ framePdbTexts: frames });
           updateUrl(null);
         })
-        .catch((e) => setMorphError(e instanceof Error ? e.message : "Morph failed"));
+        .catch((e) => setMorphError(e instanceof Error ? e.message : "Morph failed"))
+        .finally(() => setLoading(false));
     }
   };
 
@@ -161,7 +168,7 @@ export function TrajectoryDemoIntegrated() {
   };
 
   return (
-    <div className="card border-teal-200 bg-gradient-to-b from-teal-50/30 to-white">
+    <div className="card border-teal-200 border-l-4 border-l-teal-500 bg-gradient-to-b from-teal-50/30 to-white">
       <h2 className="text-xl font-semibold text-slate-900">Load a trajectory</h2>
       <p className="mt-1 text-sm text-slate-600">
         <strong>Preset</strong> — built-in peptide–receptor demos. <strong>By PDB IDs / File URL</strong> — use your own binding pathway or multi-MODEL PDB (e.g. from MD). <strong>Morph</strong> — interpolate between two structures.
@@ -215,7 +222,9 @@ export function TrajectoryDemoIntegrated() {
             <button type="button" onClick={handleRunPreset} className="btn-primary rounded-none px-5 py-2.5">
               Run simulation
             </button>
-            <span className="text-xs text-slate-500">Press Enter in the dropdown to run</span>
+            <span className="text-xs text-slate-500">
+              Press Enter in the dropdown to run. The lab viewer opens below.
+            </span>
           </div>
         </>
       )}
@@ -238,12 +247,12 @@ export function TrajectoryDemoIntegrated() {
             <button
               type="button"
               onClick={handleCustomLoad}
-              disabled={!canCustomLoad}
+              disabled={!canCustomLoad || loading}
               className="btn-primary rounded-none px-4 py-2 text-sm disabled:opacity-50"
             >
-              Load trajectory
+              {loading ? "Loading…" : "Load trajectory"}
             </button>
-            {loaded && (
+            {loaded && !loading && (
               <button
                 type="button"
                 onClick={() => { setLoaded(null); updateUrl(null); }}
@@ -252,7 +261,7 @@ export function TrajectoryDemoIntegrated() {
                 Clear
               </button>
             )}
-            {shareUrl && (
+            {shareUrl && !loading && (
               <button
                 type="button"
                 onClick={handleCopyLink}
@@ -283,12 +292,12 @@ export function TrajectoryDemoIntegrated() {
             <button
               type="button"
               onClick={handleCustomLoad}
-              disabled={!canCustomLoad}
+              disabled={!canCustomLoad || loading}
               className="btn-primary rounded-none px-4 py-2 text-sm disabled:opacity-50"
             >
-              Load trajectory
+              {loading ? "Loading…" : "Load trajectory"}
             </button>
-            {loaded && (
+            {loaded && !loading && (
               <button
                 type="button"
                 onClick={() => { setLoaded(null); updateUrl(null); }}
@@ -297,7 +306,7 @@ export function TrajectoryDemoIntegrated() {
                 Clear
               </button>
             )}
-            {shareUrl && (
+            {shareUrl && !loading && (
               <button
                 type="button"
                 onClick={handleCopyLink}
@@ -335,18 +344,22 @@ export function TrajectoryDemoIntegrated() {
               />
             </div>
           </div>
-          {morphError && <p className="mt-2 text-sm text-amber-600">{morphError}</p>}
+          {morphError && (
+            <p className="mt-2 text-sm text-amber-600" role="alert">
+              {morphError}
+            </p>
+          )}
           <p className="mt-1 text-xs text-slate-500">Linear interpolation between two PDBs. Same atom count and order required.</p>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={handleCustomLoad}
-              disabled={!canCustomLoad}
+              disabled={!canCustomLoad || loading}
               className="btn-primary rounded-none px-4 py-2 text-sm disabled:opacity-50"
             >
-              Load trajectory
+              {loading ? "Loading…" : "Load trajectory"}
             </button>
-            {loaded && (
+            {loaded && !loading && (
               <button
                 type="button"
                 onClick={() => { setLoaded(null); updateUrl(null); }}
@@ -380,13 +393,14 @@ export function TrajectoryDemoIntegrated() {
               >
                 Fullscreen
               </button>
-              <button
-                type="button"
-                onClick={handleCloseLab}
-                className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-600"
-              >
-                Exit
-              </button>
+            <button
+              type="button"
+              onClick={handleCloseLab}
+              className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-600"
+              title="Close this panel"
+            >
+              Exit
+            </button>
             </div>
           </div>
           <div className="flex flex-col lg:flex-row">
