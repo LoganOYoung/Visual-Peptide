@@ -10,8 +10,16 @@ const RCSB_DOWNLOAD_PDB = "https://files.rcsb.org/download";
 const CDN_3DMOL_PRIMARY = "https://3Dmol.org/build/3Dmol-min.js";
 const CDN_3DMOL_FALLBACK = "https://cdn.jsdelivr.net/npm/3dmol@2.5.4/build/3Dmol-min.js";
 
+const VIEWER_BG = "0x1e3a5f";
+const GRID_COLOR = "#7dd3fc";
+const GRID_STEP = 5;
+const GRID_MARGIN = 20;
+const DEFAULT_BOUNDS = { minX: -40, maxX: 40, minY: -40, maxY: 40, minZ: -25, maxZ: 25 };
+
 const DISPLAY_MODES = ["cartoon", "stick", "line", "sphere"] as const;
 type DisplayMode = (typeof DISPLAY_MODES)[number];
+
+type Bounds = { minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number };
 
 type ViewerInstance = {
   addModel: (data: string, format: string) => void;
@@ -20,11 +28,44 @@ type ViewerInstance = {
   center?: (sel?: object) => void;
   render: () => void;
   destroy?: () => void;
+  getModel?: (id?: number) => { getAtomList?: () => { x?: number; y?: number; z?: number }[] } | null;
   mapAtomProperties?: (props: (atom: AtomLike) => void, sel?: object) => void;
   addLine?: (spec: { start: { x: number; y: number; z: number }; end: { x: number; y: number; z: number }; color?: string }) => unknown;
   removeAllShapes?: () => void;
   pngURI?: () => string;
 };
+
+function getBoundsFromViewer(viewer: ViewerInstance): Bounds {
+  try {
+    const model = viewer.getModel?.(0);
+    const list = model?.getAtomList?.();
+    if (!list?.length) return DEFAULT_BOUNDS;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    for (const a of list) {
+      const x = a.x ?? 0, y = a.y ?? 0, z = a.z ?? 0;
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+      if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+    }
+    if (minX === Infinity) return DEFAULT_BOUNDS;
+    return { minX, maxX, minY, maxY, minZ, maxZ };
+  } catch {
+    return DEFAULT_BOUNDS;
+  }
+}
+
+function addGridLines(viewer: ViewerInstance, bounds: Bounds): void {
+  if (!viewer.addLine) return;
+  const z = bounds.minZ - 5;
+  const xMin = bounds.minX - GRID_MARGIN, xMax = bounds.maxX + GRID_MARGIN;
+  const yMin = bounds.minY - GRID_MARGIN, yMax = bounds.maxY + GRID_MARGIN;
+  for (let y = yMin; y <= yMax; y += GRID_STEP) {
+    viewer.addLine({ start: { x: xMin, y, z }, end: { x: xMax, y, z }, color: GRID_COLOR });
+  }
+  for (let x = xMin; x <= xMax; x += GRID_STEP) {
+    viewer.addLine({ start: { x, y: yMin, z }, end: { x, y: yMax, z }, color: GRID_COLOR });
+  }
+}
 interface AtomLike {
   resn?: string;
   chain?: string;
@@ -93,6 +134,7 @@ export function PdbViewerInSite({
   const containerRef = useRef<HTMLDivElement>(null);
   const resolvedRef = useRef(false);
   const viewerRef = useRef<ViewerInstance | null>(null);
+  const boundsRef = useRef<Bounds | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [residueInfo, setResidueInfo] = useState<{ resn: string; chain: string; resi: number } | null>(null);
@@ -166,7 +208,7 @@ export function PdbViewerInSite({
     const run = ($3Dmol: NonNullable<Window["$3Dmol"]>) => {
       if (cancelled || !el) return;
       try {
-        viewer = $3Dmol.createViewer(el, { backgroundColor: "0xf1f5f9" });
+        viewer = $3Dmol.createViewer(el, { backgroundColor: VIEWER_BG });
         viewerRef.current = viewer;
       } catch (e) {
         if (!cancelled) {
@@ -183,6 +225,9 @@ export function PdbViewerInSite({
         .then((pdbText) => {
           if (cancelled || !viewer) return;
           viewer.addModel(pdbText, "pdb");
+          const bounds = getBoundsFromViewer(viewer);
+          boundsRef.current = bounds;
+          addGridLines(viewer, bounds);
           const chainList = chainsFromPdb(pdbText);
           apiRef.current.setChains(chainList);
           apiRef.current.setVisibleChains(new Set(chainList));
@@ -200,6 +245,8 @@ export function PdbViewerInSite({
                 const d = dist(next[0], next[1]);
                 api.setDistanceÅ(d);
                 viewer.removeAllShapes?.();
+                const b = boundsRef.current;
+                if (b) addGridLines(viewer, b);
                 viewer.addLine?.({
                   start: { x: next[0].x ?? 0, y: next[0].y ?? 0, z: next[0].z ?? 0 },
                   end: { x: next[1].x ?? 0, y: next[1].y ?? 0, z: next[1].z ?? 0 },
@@ -209,6 +256,8 @@ export function PdbViewerInSite({
               } else if (next[1] == null) {
                 api.setDistanceÅ(null);
                 viewer?.removeAllShapes?.();
+                const b = boundsRef.current;
+                if (b && viewer) addGridLines(viewer, b);
                 viewer?.render?.();
               }
               return;
@@ -369,8 +418,11 @@ export function PdbViewerInSite({
         measureAtomsRef.current = [null, null];
         setMeasureAtoms([null, null]);
         setDistanceÅ(null);
-        viewerRef.current?.removeAllShapes?.();
-        viewerRef.current?.render?.();
+        const v = viewerRef.current;
+        v?.removeAllShapes?.();
+        const b = boundsRef.current;
+        if (b && v) addGridLines(v, b);
+        v?.render?.();
       }
       return !on;
     });
@@ -455,7 +507,7 @@ export function PdbViewerInSite({
   return (
     <div
       data-viewer="in-site"
-      className={`flex overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate flex-col md:flex-row ${className}`}
+      className={`flex overflow-hidden rounded-none border-2 border-slate-200 bg-slate-200 isolate flex-col md:flex-row ${className}`}
       style={{ contain: "layout" }}
     >
       <div className="flex flex-1 min-w-0 flex-col">
@@ -515,7 +567,7 @@ export function PdbViewerInSite({
         <div className="relative w-full flex-1 min-h-0" style={{ minHeight: `${minHeight}px` }}>
         {!loaded && !error && (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"
+            className="absolute inset-0 flex items-center justify-center bg-[#1e3a5f]/95 text-slate-300 z-10"
             style={{ minHeight: `${minHeight}px` }}
           >
             <span className="animate-pulse">Loading 3D structure…</span>
@@ -523,7 +575,7 @@ export function PdbViewerInSite({
         )}
         {error && (
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-100/95 text-amber-700 text-sm px-4 z-10"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#1e3a5f]/95 text-amber-300 text-sm px-4 z-10"
             style={{ minHeight: `${minHeight}px` }}
           >
             <span>{error}</span>
@@ -534,7 +586,7 @@ export function PdbViewerInSite({
         )}
         <div
           ref={containerRef}
-          className="w-full bg-slate-100"
+          className="w-full bg-[#1e3a5f]"
           style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
         />
         {(residueInfo || hotspotText) && loaded && (
