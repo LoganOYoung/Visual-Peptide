@@ -18,36 +18,11 @@ export const metadata: Metadata = {
 };
 
 const TOOL_CARDS = [
-  {
-    href: "/tools/calculator",
-    title: "Recon & Dosing",
-    desc: "Concentration, diluent volume, dose per injection, syringe units (0.3 / 0.5 / 1 mL).",
-    icon: "🧮",
-  },
-  {
-    href: "/tools/syringe-planner",
-    title: "Syringe Planner",
-    desc: "See exactly where to draw. Visual syringe with fill level for your dose.",
-    icon: "💉",
-  },
-  {
-    href: "/peptides",
-    title: "Peptide Library",
-    desc: "Browse by category: Metabolic, Repair, Cognitive. Search by name, CAS, or sequence.",
-    icon: "📋",
-  },
-  {
-    href: "/structure",
-    title: "3D Structure",
-    desc: "Jump from peptide library or calculator to 3D structure; measure, export, and cite.",
-    icon: "🧬",
-  },
-  {
-    href: "/verify",
-    title: "Purity & Verify",
-    desc: "Third-party testing (Janoshik). Verify batch reports by task ID.",
-    icon: "✓",
-  },
+  { href: "/tools/calculator", title: "Recon & Dosing", desc: "Concentration, diluent volume, dose per injection, syringe units (0.3 / 0.5 / 1 mL).", icon: "🧮" },
+  { href: "/peptides", title: "Peptide Library", desc: "Browse by category: Metabolic, Repair, Cognitive. Search by name, CAS, or sequence.", icon: "📋" },
+  { href: "/structure", title: "3D Structure", desc: "View structures in-site. Measure, export, and cite.", icon: "🧬" },
+  { href: "/verify", title: "Purity & Verify", desc: "Third-party testing (Janoshik). Verify batch reports by task ID.", icon: "✓" },
+  { href: "/tools/syringe-planner", title: "Syringe Planner", desc: "See exactly where to draw. Visual syringe with fill level for your dose.", icon: "💉" },
 ] as const;
 
 const POPULAR_PEPTIDES = [
@@ -89,9 +64,6 @@ export default function HomePage() {
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Research and education only. Not medical advice.
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            For researchers, lab staff, and anyone who needs neutral reference and precise calculations.
           </p>
           <div className="mt-8">
             <QuickSearch />
@@ -142,8 +114,8 @@ export default function HomePage() {
           Tools & reference
         </h2>
         <p className="mt-1 text-slate-600">
-          Calculate concentration and dose, plan syringe draws, compare peptides, or verify reports. Need vial planning or cost per dose?{" "}
-          <Link href="/tools" className="link-inline font-medium">All tools (Vial & Cycle, Unit Converter, Cost per Dose) →</Link>
+          Concentration and dose, peptide library, 3D structure, and purity verification.{" "}
+          <Link href="/tools" className="link-inline font-medium">All tools →</Link>
         </p>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {TOOL_CARDS.map((item) => (
@@ -199,41 +171,27 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-6xl px-4 py-10 sm:py-14" aria-label="Verify">
-        <div className="card border-teal-200 bg-teal-50/50 text-center">
-          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-            Verify before you source
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            Use our{" "}
-            <Link href="/verify" className="link-inline">
-              Purity & Verify
-            </Link>{" "}
-            tools to check third-party test reports (e.g. Janoshik) by task ID — for procurement, QC, or before you buy.
-          </p>
-          <Link
-            href="/verify"
-            className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-none bg-teal-600 px-5 py-2.5 font-medium text-white transition hover:bg-teal-700"
-          >
-            Open Verify
+      <section className="mx-auto max-w-6xl px-4 py-8 sm:py-10" aria-label="Verify">
+        <p className="text-slate-600">
+          Verify before you source: check third-party test reports (e.g. Janoshik) by task ID.{" "}
+          <Link href="/verify" className="link-inline font-medium">
+            Open Verify →
           </Link>
-        </div>
+        </p>
       </section>
 
-      <p className="mx-auto max-w-6xl px-4 pt-4 pb-8 text-center text-xs text-slate-500">
-        For research and education only. Not medical advice. Verify purity with third-party testing when sourcing.
-        {" "}
-        <Link href="/tools" className="link-inline">Tools</Link>
-        {" · "}
-        <Link href="/peptides" className="link-inline">Peptides</Link>
-        {" · "}
-        <Link href="/guide" className="link-inline">Guide</Link>
-        {" · "}
-        <Link href="/faq" className="link-inline">FAQ</Link>
-        {" · "}
-        <Link href="/about" className="link-inline">About</Link>
-      </p>
+      <footer className="mx-auto max-w-6xl px-4 pt-4 pb-8 text-center text-xs text-slate-500">
+        <p>For research and education only. Not medical advice. Verify purity with third-party testing when sourcing.</p>
+        <nav className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1" aria-label="Footer">
+          <Link href="/tools" className="link-inline inline-flex min-h-[44px] items-center sm:min-h-0">Tools</Link>
+          <Link href="/peptides" className="link-inline inline-flex min-h-[44px] items-center sm:min-h-0">Peptides</Link>
+          <Link href="/structure" className="link-inline inline-flex min-h-[44px] items-center sm:min-h-0">3D Structure</Link>
+          <Link href="/verify" className="link-inline inline-flex min-h-[44px] items-center sm:min-h-0">Verify</Link>
+          <Link href="/guide" className="link-inline inline-flex min-h-[44px] items-center sm:min-h-0">Guide</Link>
+          <Link href="/faq" className="link-inline inline-flex min-h-[44px] items-center sm:min-h-0">FAQ</Link>
+          <Link href="/about" className="link-inline inline-flex min-h-[44px] items-center sm:min-h-0">About</Link>
+        </nav>
+      </footer>
     </div>
   );
 }
