@@ -68,13 +68,13 @@ export default async function PeptideDetailPage({
                 href={`/structure?pdb=${peptide.pdbId}`}
                 className="btn-primary"
               >
-                查看 3D 结构 (PDB {peptide.pdbId}) →
+                View 3D structure (PDB {peptide.pdbId}) →
               </Link>
               <Link
                 href={`/tools/calculator?peptide=${peptide.slug}`}
                 className="btn-secondary"
               >
-                剂量计算
+                Dosing calculator
               </Link>
             </div>
           )}
@@ -86,7 +86,7 @@ export default async function PeptideDetailPage({
         <div className="mt-8">
           {getStructureRationale(peptide.pdbId) && (
             <p className="mb-3 text-sm text-slate-600">
-              <span className="font-medium text-slate-700">为何选此结构：</span>
+              <span className="font-medium text-slate-700">Why this structure: </span>
               {getStructureRationale(peptide.pdbId)}
             </p>
           )}

@@ -408,7 +408,7 @@ export function PdbViewerInSite({
         <div className="flex flex-wrap items-center gap-3">
           {loaded && chains.length > 0 && (
             <>
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">链</span>
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Chain</span>
               <div className="flex flex-wrap gap-2">
                 {chains.map((c) => (
                   <label key={c} className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
@@ -445,7 +445,7 @@ export function PdbViewerInSite({
                 onClick={toggleMeasureMode}
                 className={`rounded px-2 py-1 text-xs font-medium ${measureMode ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
               >
-                测距
+                Measure
               </button>
               {distanceÅ != null && (
                 <span className="text-sm font-medium text-slate-700">{distanceÅ.toFixed(2)} Å</span>
@@ -455,7 +455,7 @@ export function PdbViewerInSite({
                 onClick={handleExportPng}
                 className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
               >
-                导出 PNG
+                Export PNG
               </button>
             </>
           )}
@@ -508,7 +508,7 @@ export function PdbViewerInSite({
                 onClick={() => setDetailsExpanded((e) => !e)}
                 className="flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 hover:bg-slate-200"
               >
-                序列 ↔ 3D {detailsExpanded ? "▼" : "▶"}
+                Seq ↔ 3D {detailsExpanded ? "▼" : "▶"}
               </button>
             )}
           </div>

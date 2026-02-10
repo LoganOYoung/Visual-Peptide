@@ -1,5 +1,5 @@
 /**
- * 导航：Tools/Peptides 带下拉。顺序按「工具 → 内容 → 验证 → 帮助」。
+ * Nav: Tools/Peptides with dropdowns. Order: tools → content → verify → help.
  */
 
 export const navLinks = [
@@ -14,7 +14,7 @@ export const navLinks = [
   { href: "/about", label: "About" },
 ] as const;
 
-/** 顶栏主项：工具与内容优先，Help 收纳 Guide/FAQ/About */
+/** Header main items: tools and content first; Help holds Guide/FAQ/About */
 export const headerLinks: { href: string; label: string }[] = [
   { href: "/tools", label: "Tools" },
   { href: "/peptides", label: "Peptides" },
@@ -23,7 +23,7 @@ export const headerLinks: { href: string; label: string }[] = [
   { href: "/guide", label: "Help" },
 ];
 
-/** Help 下拉子项（href 以 http 开头时为外链，新开 tab） */
+/** Help dropdown items (href starting with http opens in new tab) */
 export const helpSubLinks = [
   { href: "/guide", label: "Guide" },
   { href: "/faq", label: "FAQ" },
@@ -34,7 +34,7 @@ export const helpSubLinks = [
   },
 ] as const;
 
-/** Tools 子页 */
+/** Tools sub-pages */
 export const toolsSubLinks = [
   { href: "/tools/calculator", label: "Recon & Dosing" },
   { href: "/tools/syringe-planner", label: "Syringe Planner" },
@@ -43,13 +43,13 @@ export const toolsSubLinks = [
   { href: "/tools/cost", label: "Cost per Dose" },
 ] as const;
 
-/** Peptides 子页 */
+/** Peptides sub-pages */
 export const peptidesSubLinks = [
   { href: "/peptides", label: "Library" },
   { href: "/peptides/compare", label: "Compare" },
 ] as const;
 
-/** 3D Structure 子页 */
+/** 3D Structure sub-pages */
 export const structureSubLinks = [
   { href: "/structure", label: "3D Structure Viewer" },
   { href: "/structure/demo", label: "3D Reaction demo" },

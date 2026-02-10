@@ -75,7 +75,7 @@ export default function StructurePage({
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "3D Structure" }]} baseUrl={getBaseUrl()} />
       <h1 className="mt-2 text-3xl font-bold text-slate-900">3D Structure Viewer</h1>
       <p className="mt-2 text-slate-600">
-        从肽段选择、结构查看，到剂量计算与复溶——一站完成，无需在数据库和计算器之间切换。
+        From peptide choice and structure view to dosing and reconstitution—all in one place, without switching between databases and calculators.
       </p>
       <p className="mt-1 text-sm text-slate-500">
         View PDB structures in-page. Drag to rotate, scroll to zoom.{" "}
@@ -95,20 +95,20 @@ export default function StructurePage({
         {!isDemo && peptideForPdb && (
           <div className="mb-4 rounded-none border border-teal-200 bg-teal-50/50 px-4 py-3">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-slate-700">当前结构对应肽段 <strong className="text-slate-900">{peptideForPdb.name}</strong></span>
+              <span className="text-slate-700">This structure is <strong className="text-slate-900">{peptideForPdb.name}</strong></span>
               <Link href={`/tools/calculator?peptide=${peptideForPdb.slug}`} className="btn-primary text-sm">
-                剂量计算
+                Dosing calculator
               </Link>
               <Link href={`/peptides/${peptideForPdb.slug}`} className="btn-secondary text-sm">
-                肽段详情
+                Peptide detail
               </Link>
               <Link href="/verify" className="rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                验证报告
+                Purity & Verify
               </Link>
             </div>
             {structureRationale && (
               <p className="mt-2 text-sm text-slate-600">
-                <span className="font-medium text-slate-700">为何选此结构：</span>
+                <span className="font-medium text-slate-700">Why this structure: </span>
                 {structureRationale}
               </p>
             )}
@@ -124,7 +124,7 @@ export default function StructurePage({
             </div>
             {structureRationale && (
               <p className="mt-2 text-sm text-slate-600">
-                <span className="font-medium text-slate-700">为何选此结构：</span>
+                <span className="font-medium text-slate-700">Why this structure: </span>
                 {structureRationale}
               </p>
             )}

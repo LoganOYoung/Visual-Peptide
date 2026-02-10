@@ -39,7 +39,7 @@ const TOOL_CARDS = [
   {
     href: "/structure",
     title: "3D Structure",
-    desc: "从肽库或计算器直达 3D 结构，支持测距、导出与引用。",
+    desc: "Jump from peptide library or calculator to 3D structure; measure, export, and cite.",
     icon: "🧬",
   },
   {
@@ -85,10 +85,10 @@ export default function HomePage() {
             Precision without the math
           </h1>
           <p className="mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
-            从肽段选择、结构查看，到剂量计算与复溶——一站完成，无需在数据库和计算器之间切换。
+            From peptide choice and structure view to dosing and reconstitution—all in one place, without switching between databases and calculators.
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            From 3D structure to syringe draw: calculators, dosing, vial planning, and purity verification in one place.
+            Calculators, dosing, vial planning, and purity verification in one place.
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Research and education only. Not medical advice.

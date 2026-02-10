@@ -1,6 +1,6 @@
 /**
- * Peptide Purity Pulse — 手动维护的批次验证摘要。
- * 每周可更新 3–5 条，营造与全球实验室深度连接的权威感。
+ * Peptide Purity Pulse — manually curated batch verification summaries.
+ * Update 3–5 entries weekly to reflect recent lab-verified batches.
  */
 
 export interface PurityPulseEntry {
