@@ -64,6 +64,36 @@ a:focus-visible {
   @apply outline-none ring-2 ring-teal-500 ring-offset-2 ring-offset-[var(--ring-offset)];
 }
 
+/* Home: three-frame trajectory crossfade (light animation) */
+.home-trajectory-frames {
+  --t1: 1;
+  --t2: 0;
+  --t3: 0;
+  animation: home-trajectory-frames 9s ease-in-out infinite;
+}
+@keyframes home-trajectory-frames {
+  0%, 30% { --t1: 1; --t2: 0; --t3: 0; }
+  33%, 63% { --t1: 0; --t2: 1; --t3: 0; }
+  66%, 96% { --t1: 0; --t2: 0; --t3: 1; }
+  100% { --t1: 1; --t2: 0; --t3: 0; }
+}
+
+/* Home: syringe fill animation */
+.home-syringe-liquid {
+  transform-origin: 60px 160px;
+  animation: home-syringe-fill 4s ease-in-out infinite;
+}
+@keyframes home-syringe-fill {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(0.75); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-syringe-liquid {
+    animation: none;
+    transform: scaleY(0.5);
+  }
+}
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
