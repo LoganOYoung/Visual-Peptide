@@ -173,7 +173,7 @@ export default function StructurePage({
               <li><strong>Chains:</strong> Use the checkboxes above the viewer to show or hide each chain.</li>
               <li><strong>Display mode:</strong> Switch between cartoon, stick, line, or sphere (buttons above the viewer).</li>
               <li><strong>Seq ↔ 3D:</strong> Open the panel to see residue numbers by chain; click a number to center the view on that residue. Hover in 3D to highlight the same residue in the panel.</li>
-              <li><strong>Hover:</strong> Move the mouse over the structure to see residue name, chain, and number in the bottom-left overlay; configured residues show a short description. The hovered residue is highlighted in red.</li>
+              <li><strong>Hover:</strong> Move the mouse over the structure to see full residue info (structure title, PDB ID, chain, residue) in the bottom-left overlay; configured residues show a short description. The hovered residue gets a red outline (RCSB-style).</li>
               <li><strong>Measure:</strong> Turn on Measure, then click two atoms to see the distance (Å) and a red line between them.</li>
               <li><strong>Export PNG</strong> saves the current view; <strong>Download PDB</strong> and <strong>Copy Cite</strong> are in the bar above the viewer.</li>
             </ul>
