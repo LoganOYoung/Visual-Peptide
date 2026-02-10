@@ -16,7 +16,6 @@ type DisplayMode = (typeof DISPLAY_MODES)[number];
 type ViewerInstance = {
   addModel: (data: string, format: string) => void;
   setStyle: (sel: object, style: object) => void;
-  addStyle?: (sel: object, style: object) => void;
   zoomTo: (sel?: object) => void;
   center?: (sel?: object) => void;
   render: () => void;
@@ -234,11 +233,6 @@ export function PdbViewerInSite({
               };
             }, {});
           }
-          if (typeof viewer.addStyle === "function") {
-            viewer.addStyle({}, { clicksphere: { radius: 0.25 } });
-          }
-
-          viewer.setStyle({}, { cartoon: { color: "spectrum" } });
           viewer.zoomTo();
           viewer.render();
           if (!cancelled) {
@@ -343,7 +337,7 @@ export function PdbViewerInSite({
     if (residueInfo && visibleChains.has(residueInfo.chain)) {
       v.setStyle(
         { chain: residueInfo.chain, resi: residueInfo.resi },
-        { [displayMode]: base, outline: { color: "red" as const, width: 0.4, maxpixels: 5 }, ...clickSphere }
+        { [displayMode]: { color: "red" as const }, ...clickSphere }
       );
     }
     v.render();
