@@ -44,6 +44,13 @@ export default function StructureDemoPage() {
           Peptide Library
         </Link>
       </p>
+      <p className="mt-2 text-sm text-slate-600">
+        Use your own PDB IDs or multi-MODEL file in the loader below, or see{" "}
+        <Link href="#about-trajectory" className="link-inline font-medium">
+          How to prepare your trajectory
+        </Link>{" "}
+        in the About section at the bottom.
+      </p>
 
       <section className="mt-8">
         <Suspense fallback={<div className="card h-48 animate-pulse rounded-none bg-slate-100" />}>
@@ -96,7 +103,7 @@ export default function StructureDemoPage() {
       </div>
       </section>
 
-      <div className="card mt-8 border-teal-200 bg-teal-50/30">
+      <div id="about-trajectory" className="card mt-8 border-teal-200 bg-teal-50/30 scroll-mt-24">
         <h3 className="text-lg font-semibold text-slate-900">About this feature</h3>
         <p className="mt-2 text-sm text-slate-600">
           Trajectories are <strong>pre-loaded or user-provided</strong>; no real-time simulation. Playback only.

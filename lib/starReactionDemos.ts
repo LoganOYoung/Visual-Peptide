@@ -33,6 +33,22 @@ export const starReactionDemos: StarReactionDemo[] = [
     bindingAffinity: "Dual GIP/GLP-1 agonist. Structure: Tirzepatide–receptor complex (PDB 7V2K). Research reference only.",
     caption: "Receptor → dual agonist–receptor complex",
   },
+  {
+    peptideSlug: "tb-500",
+    peptideName: "TB-500",
+    receptorLabel: "—",
+    framePdbIds: ["1HJ0", "2LL5"],
+    bindingAffinity: "Thymosin β4 fragment. Structures: Thymosin β9 (PDB 1HJ0), small peptide (PDB 2LL5). Illustrative only.",
+    caption: "Thymosin β-related (1HJ0) → small peptide (2LL5)",
+  },
+  {
+    peptideSlug: "bpc-157",
+    peptideName: "BPC-157",
+    receptorLabel: "—",
+    framePdbIds: ["2LL5", "1D4P"],
+    bindingAffinity: "Synthetic peptide fragment. Structures: illustrative small peptides (2LL5, 1D4P). Research reference only.",
+    caption: "Small peptide structures (illustrative)",
+  },
 ];
 
 /** Get demo by peptide slug; used for lookup on Run. */

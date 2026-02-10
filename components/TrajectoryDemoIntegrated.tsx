@@ -273,6 +273,9 @@ export function TrajectoryDemoIntegrated() {
               <p className="mt-1 text-xs text-slate-500">Auto-filled from selected peptide</p>
             </div>
           </div>
+          <p className="mt-2 text-sm text-slate-600">
+            Select a star product to view its binding trajectory. Data is pre-loaded for demonstration.
+          </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button type="button" onClick={handleRunPreset} className="btn-primary rounded-none px-5 py-2.5">
               Run simulation
@@ -317,13 +320,17 @@ export function TrajectoryDemoIntegrated() {
               </button>
             )}
             {shareUrl && !loading && (
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="rounded-none border border-slate-300 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                {copyStatus === "ok" ? "Copied!" : copyStatus === "fail" ? "Copy failed" : "Copy share link"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="rounded-none border border-slate-300 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                  title="Link includes current frame, view, and play state—suitable for papers and collaboration."
+                >
+                  {copyStatus === "ok" ? "Copied!" : copyStatus === "fail" ? "Copy failed" : "Copy share link"}
+                </button>
+                <span className="text-xs text-slate-500">Link includes frame, view, and play state—good for papers and collaboration.</span>
+              </>
             )}
           </div>
         </>
@@ -337,11 +344,11 @@ export function TrajectoryDemoIntegrated() {
               type="text"
               value={pdbUrlInput}
               onChange={(e) => setPdbUrlInput(e.target.value)}
-              placeholder="e.g. /trajectories/demo.pdb or https://..."
+              placeholder="e.g. /trajectories/demo.pdb or https://example.com/traj.pdb"
               className="w-full max-w-md rounded-none border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
               onKeyDown={(e) => e.key === "Enter" && handleCustomLoad()}
             />
-            <p className="mt-1 text-xs text-slate-500">Path or full URL to a multi-MODEL PDB.</p>
+            <p className="mt-1 text-xs text-slate-500">Path under public/ (e.g. /trajectories/demo.pdb) or full URL to a multi-MODEL PDB.</p>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
@@ -362,13 +369,17 @@ export function TrajectoryDemoIntegrated() {
               </button>
             )}
             {shareUrl && !loading && (
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="rounded-none border border-slate-300 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                {copyStatus === "ok" ? "Copied!" : copyStatus === "fail" ? "Copy failed" : "Copy share link"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="rounded-none border border-slate-300 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                  title="Link includes current frame, view, and play state—suitable for papers and collaboration."
+                >
+                  {copyStatus === "ok" ? "Copied!" : copyStatus === "fail" ? "Copy failed" : "Copy share link"}
+                </button>
+                <span className="text-xs text-slate-500">Link includes frame, view, and play state—good for papers and collaboration.</span>
+              </>
             )}
           </div>
         </>
@@ -436,10 +447,15 @@ export function TrajectoryDemoIntegrated() {
           aria-label="Laboratory Simulation Mode"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 bg-slate-800 px-4 py-3">
-            <span className="text-sm font-medium text-teal-300">Laboratory Simulation Mode</span>
+            <div>
+              <span className="text-sm font-medium text-teal-300">Laboratory Simulation Mode</span>
+              <p className="mt-0.5 text-xs text-slate-400">Pre-loaded trajectory demonstration (no real-time simulation).</p>
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400">
-                {running.peptideName} + {running.receptorLabel}
+                {running.receptorLabel && running.receptorLabel !== "—"
+                  ? `${running.peptideName} + ${running.receptorLabel}`
+                  : running.peptideName}
               </span>
               <button
                 type="button"
