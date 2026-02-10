@@ -10,9 +10,9 @@ import { getBaseUrl, getCanonicalUrl } from "@/lib/site";
 const canonical = getCanonicalUrl("/structure/demo");
 
 export const metadata: Metadata = {
-  title: "3D reaction demo",
+  title: "3D Reaction Demonstration",
   description:
-    "Multi-frame 3D reaction demos: peptide–receptor structures and trajectory playback. Preset data, no real-time computation.",
+    "Multi-frame 3D reaction demonstration: peptide–receptor structures and trajectory playback. Preset data, no real-time computation.",
   alternates: { canonical },
   openGraph: { url: canonical },
 };
@@ -24,11 +24,11 @@ export default function StructureDemoPage() {
         items={[
           { label: "Home", href: "/" },
           { label: "3D Structure", href: "/structure" },
-          { label: "Reaction demo" },
+          { label: "Reaction Demonstration" },
         ]}
         baseUrl={getBaseUrl()}
       />
-      <h1 className="mt-2 text-3xl font-bold text-slate-900">3D reaction demo</h1>
+      <h1 className="mt-2 text-3xl font-bold text-slate-900">3D Reaction Demonstration</h1>
       <p className="mt-2 text-slate-600">
         Multi-frame trajectory playback: each demo loads a sequence of PDB structures and plays them in order. Use Play/Pause and frame buttons to control playback.
       </p>

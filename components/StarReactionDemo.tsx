@@ -31,7 +31,7 @@ export function StarReactionDemo() {
 
   return (
     <div className="card border-teal-200 bg-gradient-to-b from-teal-50/40 to-white">
-      <h2 className="text-xl font-semibold text-slate-900">Star product reaction demo</h2>
+      <h2 className="text-xl font-semibold text-slate-900">Star product reaction demonstration</h2>
       <p className="mt-1 text-sm text-slate-600">
         Select a peptide. Receptor is auto-filled. Run to view the preset binding simulation (no real-time computation).
       </p>

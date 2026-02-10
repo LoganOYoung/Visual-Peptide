@@ -53,24 +53,6 @@ body {
     background-size: 28px 28px;
     pointer-events: none;
   }
-
-  /* 3D reaction demo: flowing light lines (流光线条) */
-  .viewer-flow-lines {
-    pointer-events: none;
-    background-image: repeating-linear-gradient(
-      105deg,
-      transparent 0,
-      transparent 36px,
-      rgba(148, 203, 255, 0.07) 36px,
-      rgba(148, 203, 255, 0.07) 38px
-    );
-    background-size: 76px 76px;
-    animation: viewer-flow-lines 14s linear infinite;
-  }
-  @keyframes viewer-flow-lines {
-    0% { background-position: 0 0; }
-    100% { background-position: 76px 76px; }
-  }
 }
 
 /* Touch: remove tap highlight, faster tap (no 300ms delay), keep focus ring */

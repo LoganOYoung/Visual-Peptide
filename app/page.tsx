@@ -88,11 +88,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3D reaction demo: embedded molecule viewer */}
+      {/* 3D Reaction Demonstration: embedded molecule viewer */}
       <Suspense
         fallback={
-          <section className="mx-auto max-w-6xl px-4 py-10 sm:py-14" aria-label="3D reaction demo">
-            <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">3D reaction demo</h2>
+          <section className="mx-auto max-w-6xl px-4 py-10 sm:py-14" aria-label="3D Reaction Demonstration">
+            <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">3D Reaction Demonstration</h2>
             <p className="mt-1 text-slate-600">
               Multi-frame trajectory: peptide–receptor binding, conformation change. Preset data, no real-time simulation.
             </p>

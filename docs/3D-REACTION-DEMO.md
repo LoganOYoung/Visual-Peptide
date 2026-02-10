@@ -1,4 +1,4 @@
-# 3D 反应演示 (3D reaction demo)
+# 3D 反应演示 (3D Reaction Demonstration)
 
 ## 功能定位
 
@@ -32,7 +32,7 @@
 | Verify with Batch Report | ✅ 已有 | Lab 侧栏与 Custom 视窗下方入口，链到 /verify |
 | 分享链接 | ✅ 已有 | 自定义加载后「Copy share link」；URL 带 `?pdbIds=...` 或 `?pdbUrl=...` 可直开 |
 | 关键帧插值 (Morphing) | ✅ 已有 | 选「Morph (A→B)」，输入两个 PDB ID，前端线性插值生成多帧并播放 |
-| 预渲染视频 (Hero) | ✅ 已有 | 首页「3D reaction demo」区块：可放 `public/videos/reaction-hero.mp4`，无则显示 CTA 链到 /structure/demo |
+| 预渲染视频 (Hero) | ✅ 已有 | 首页「3D Reaction Demonstration」区块：可放 `public/videos/reaction-hero.mp4`，无则显示 CTA 链到 /structure/demo |
 
 **明星产品反应演示**（约束式、商业向）：  
 - 下拉选肽（仅列出有预设演示的明星产品）→ 受体自动带出 →「Run simulation」→ 进入 **Laboratory Simulation Mode**（深色面板 + 预设轨迹播放 + 侧栏 Binding / 结构说明）。  
@@ -44,7 +44,7 @@
 
 ## 用户能力说明（用 viewer 能做什么）
 
-用户打开 **3D reaction demo** 页（`/structure/demo`）后，可以完成以下操作。
+用户打开 **3D Reaction Demonstration** 页（`/structure/demo`）后，可以完成以下操作。
 
 ### 1. 观看轨迹
 
@@ -122,7 +122,7 @@
 | `lib/trajectoryDemos.ts` | 演示列表：每项为 `framePdbIds`（多 PDB ID）或 `pdbUrl`（单文件） |
 | `public/trajectories/` | 可放置多 MODEL PDB 文件，如 `demo.pdb` |
 | `app/structure/demo/page.tsx` | 演示页路由 |
-| `app/structure/page.tsx` | 单帧 3D 页，含「3D reaction demo」入口 |
+| `app/structure/page.tsx` | 单帧 3D 页，含「3D Reaction Demonstration」入口 |
 | `components/TrajectoryDemoIntegrated.tsx` | 集成加载器：Preset / PDB IDs / URL / Morph，状态 URL（frame/view）与 Verify 入口 |
 | `components/TrajectoryDemoCustomLoader.tsx` | 自定义加载：PDB IDs / URL / Morph，分享链接与 URL 同步 |
 | `components/HeroReactionVideo.tsx` | 首页 3D 反应区块：可选视频 + CTA |

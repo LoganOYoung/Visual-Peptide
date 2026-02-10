@@ -72,7 +72,7 @@ export function TrajectoryViewer({
   framePdbIds,
   pdbUrl,
   framePdbTexts,
-  title = "3D reaction demo",
+  title = "3D Reaction Demonstration",
   minHeight = 480,
   intervalMs = 600,
   autoPlay = true,
@@ -668,11 +668,6 @@ export function TrajectoryViewer({
           />
           <div
             className="viewer-grid-scan absolute inset-0 z-[1]"
-            style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}
-            aria-hidden
-          />
-          <div
-            className="viewer-flow-lines absolute inset-0 z-[1]"
             style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}
             aria-hidden
           />

@@ -18,7 +18,7 @@ export const trajectoryDemos: TrajectoryDemoSpec[] = [
     id: "glp1-receptor",
     title: "Semaglutide & GLP-1 receptor",
     description:
-      "Key structures in GLP-1 signalling: peptide (PDB 6XBM) and GLP-1 receptor (PDB 7F9W). Conceptual two-frame view; replace with real binding trajectory for full reaction demo.",
+      "Key structures in GLP-1 signalling: peptide (PDB 6XBM) and GLP-1 receptor (PDB 7F9W). Conceptual two-frame view; replace with real binding trajectory for full reaction demonstration.",
     framePdbIds: ["6XBM", "7F9W"],
   },
   {

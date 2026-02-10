@@ -24,7 +24,7 @@ export function HeroReactionVideo() {
       aria-labelledby="reaction-video-heading"
     >
       <h2 id="reaction-video-heading" className="text-2xl font-semibold text-slate-900">
-        3D reaction demo
+        3D Reaction Demonstration
       </h2>
       <p className="mt-1 text-slate-600">
         Multi-frame trajectory: peptide–receptor binding, conformation change. Preset data, no real-time simulation.
@@ -51,7 +51,7 @@ export function HeroReactionVideo() {
               href="/structure/demo"
               className="text-sm font-medium text-teal-600 hover:underline"
             >
-              Open 3D reaction demo →
+              Open 3D Reaction Demonstration →
             </Link>
           </div>
         )}
@@ -60,7 +60,7 @@ export function HeroReactionVideo() {
             href="/structure/demo"
             className="inline-block rounded-none bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700"
           >
-            Open 3D reaction demo →
+            Open 3D Reaction Demonstration →
           </Link>
         </div>
       </div>

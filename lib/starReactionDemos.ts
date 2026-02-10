@@ -1,5 +1,5 @@
 /**
- * Star product reaction demos: peptide + receptor → preset trajectory.
+ * Star product reaction demonstrations: peptide + receptor → preset trajectory.
  * Constrained list only; no open search. Data drives "Laboratory Simulation" UX.
  */
 
