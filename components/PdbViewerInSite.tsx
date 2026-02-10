@@ -648,7 +648,7 @@ export function PdbViewerInSite({
                             onClick={() => centerOnResidue(ch, resi)}
                             className={`min-h-[44px] min-w-[44px] rounded px-1.5 py-1 font-mono text-xs sm:min-h-0 sm:min-w-0 ${
                               isHighlight
-                                ? isDark ? "bg-cyan-500/30 text-cyan-200 ring-1 ring-cyan-400/50" : "bg-teal-200 text-teal-900"
+                                ? isDark ? "bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-400/50" : "bg-teal-200 text-teal-900"
                                 : isDark ? "text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text)]" : "text-slate-600 hover:bg-slate-100"
                             }`}
                             title={`${resn} ${ch}${resi}`}

@@ -16,18 +16,19 @@
   --link-hover: #0f766e;
 }
 
-/* Dark theme (tool pages) — 赛博科研 */
+/* Dark theme (tool pages) — 赛博科研：略提亮背景，文字/按钮/边框统一用一套变量 */
 [data-theme="dark"] {
-  --bg: #0a0e17;
-  --card: #111827;
+  --bg: #0f172a;   /* slate-900 */
+  --card: #1e293b; /* slate-800 */
   --accent: #22d3ee;
   --accent-dim: #06b6d4;
   --text: #f1f5f9;
   --text-muted: #94a3b8;
-  --border: #1e293b;
-  --ring-offset: #0a0e17;
+  --border: #334155; /* slate-700，与 card 协调 */
+  --ring-offset: #0f172a;
   --link: #22d3ee;
   --link-hover: #67e8f9;
+  --glass-border: rgba(255, 255, 255, 0.12); /* 玻璃边框，与 card 对比适中 */
 }
 
 html {
@@ -45,7 +46,7 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-/* 3D viewer: light blue scanning grid (赛博科研) — use as background of viewer viewport */
+/* 3D viewer: light blue scanning grid — 视口略深于页面，形成“井”感 */
 .viewer-grid-bg {
   position: absolute;
   inset: 0;
@@ -75,7 +76,7 @@ body {
   to { transform: translateY(100%); }
 }
 
-/* Glass container (Linear/Vercel style): border-white/10 + backdrop-blur */
+/* Glass container (Linear/Vercel style): 边框与背景随主题 */
 .card-glass {
   border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -83,6 +84,9 @@ body {
   padding: 1rem;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   backdrop-filter: blur(12px);
+}
+[data-theme="dark"] .card-glass {
+  border-color: var(--glass-border);
 }
 @media (min-width: 640px) {
   .card-glass { padding: 1.5rem; }
@@ -122,10 +126,10 @@ body {
 }
 
 [data-theme="dark"] .btn-primary {
-  color: #0a0e17;
+  color: #0f172a; /* 深色字在 cyan 按钮上，与 --bg 同系 */
 }
 
-/* Dark theme: remap common slate text/background so tool pages read correctly */
+/* Dark theme: 文字 — 统一用 --text / --text-muted */
 [data-theme="dark"] .text-slate-900,
 [data-theme="dark"] .text-slate-800,
 [data-theme="dark"] .text-slate-700 {
@@ -135,33 +139,55 @@ body {
 [data-theme="dark"] .text-slate-500 {
   color: var(--text-muted);
 }
+/* Dark theme: 背景 — 与 --bg / --card 协调 */
 [data-theme="dark"] .bg-slate-50,
 [data-theme="dark"] .bg-white {
   background-color: var(--bg);
 }
+[data-theme="dark"] .bg-slate-50\/80 {
+  background-color: color-mix(in srgb, var(--card) 60%, var(--bg));
+}
+[data-theme="dark"] .bg-slate-200,
+[data-theme="dark"] .bg-slate-100 {
+  background-color: var(--card);
+}
+/* Dark theme: 边框 — 统一用 --border */
 [data-theme="dark"] .border-slate-200,
 [data-theme="dark"] .border-slate-300 {
   border-color: var(--border);
 }
+/* Dark theme: teal → cyan 系，与 accent 统一 */
 [data-theme="dark"] .hover\:text-teal-600:hover,
 [data-theme="dark"] .group-hover\:text-teal-600:hover {
   color: var(--link);
 }
 [data-theme="dark"] .hover\:border-teal-500\/50:hover,
-[data-theme="dark"] .hover\:border-teal-400:hover {
+[data-theme="dark"] .hover\:border-teal-400:hover,
+[data-theme="dark"] .border-teal-200 {
   border-color: var(--accent);
 }
+[data-theme="dark"] .border-teal-300 {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
 [data-theme="dark"] .hover\:bg-teal-50:hover,
-[data-theme="dark"] .hover\:bg-slate-100:hover {
+[data-theme="dark"] .hover\:bg-slate-50:hover,
+[data-theme="dark"] .hover\:bg-slate-100:hover,
+[data-theme="dark"] .hover\:bg-teal-100:hover {
   background-color: var(--card);
 }
 [data-theme="dark"] .hover\:bg-teal-50\/30:hover {
   background-color: color-mix(in srgb, var(--accent) 15%, transparent);
 }
-[data-theme="dark"] .bg-teal-50\/50,
-[data-theme="dark"] .border-teal-300 {
+[data-theme="dark"] .bg-teal-50\/50 {
   background-color: color-mix(in srgb, var(--accent) 12%, var(--card));
-  border-color: var(--accent);
+}
+[data-theme="dark"] .bg-teal-100 {
+  background-color: color-mix(in srgb, var(--accent) 20%, var(--card));
+}
+[data-theme="dark"] .text-teal-600,
+[data-theme="dark"] .text-teal-700,
+[data-theme="dark"] .text-teal-800 {
+  color: var(--link);
 }
 [data-theme="dark"] .shadow-teal-500\/5,
 [data-theme="dark"] .shadow-teal-500\/10 {
