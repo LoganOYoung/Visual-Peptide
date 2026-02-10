@@ -341,8 +341,14 @@ export function PdbViewerInSite({
           : { [displayMode]: { ...base, opacity: 0 }, ...clickSphere }
       );
     });
+    if (residueInfo && visibleChains.has(residueInfo.chain)) {
+      v.setStyle(
+        { chain: residueInfo.chain, resi: residueInfo.resi },
+        { [displayMode]: { color: "red" as const }, ...clickSphere }
+      );
+    }
     v.render();
-  }, [loaded, chains, visibleChains, displayMode]);
+  }, [loaded, chains, visibleChains, displayMode, residueInfo]);
 
   const toggleChain = (c: string) => {
     setVisibleChains((prev) => {
@@ -495,18 +501,6 @@ export function PdbViewerInSite({
           Open in RCSB →
         </Link>
       </div>
-      {(residueInfo || hotspotText) && (
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-700">
-          {residueInfo && (
-            <span className="font-medium">
-              {residueInfo.resn} Chain {residueInfo.chain} {residueInfo.resi}
-            </span>
-          )}
-          {hotspotText && (
-            <p className="mt-1 text-slate-600">{hotspotText}</p>
-          )}
-        </div>
-      )}
       {(metadata || (loaded && Object.keys(sequenceByChain).length > 0)) && (
         <div className="border-b border-slate-200 bg-white px-4 py-2 text-sm text-slate-700">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -564,6 +558,21 @@ export function PdbViewerInSite({
           className="w-full bg-slate-100"
           style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
         />
+        {(residueInfo || hotspotText) && loaded && (
+          <div
+            className="absolute left-3 bottom-3 z-10 max-w-[280px] rounded-lg border border-slate-300 bg-white/95 px-3 py-2 text-sm text-slate-700 shadow-md backdrop-blur-sm"
+            aria-live="polite"
+          >
+            {residueInfo && (
+              <div className="font-medium">
+                {residueInfo.resn} Chain {residueInfo.chain} {residueInfo.resi}
+              </div>
+            )}
+            {hotspotText && (
+              <p className="mt-1 text-slate-600 text-xs">{hotspotText}</p>
+            )}
+          </div>
+        )}
         {seqPanelOpen && loaded && chains.length > 0 && (
           <div
             className="absolute z-20 flex w-[300px] max-h-[40vh] flex-col rounded-lg border border-slate-300 bg-white shadow-lg"
