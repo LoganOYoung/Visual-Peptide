@@ -577,7 +577,7 @@ export function PdbViewerInSite({
         )}
         {seqPanelOpen && loaded && chains.length > 0 && (
           <div
-            className="absolute z-20 flex w-[300px] max-h-[40vh] flex-col rounded-none border border-slate-600 bg-slate-800 shadow-xl"
+            className="absolute z-20 flex w-[300px] max-w-[calc(100vw-1rem)] max-h-[40vh] flex-col rounded-none border border-slate-600 bg-slate-800 shadow-xl"
             style={{
               right: 8,
               bottom: 8,
