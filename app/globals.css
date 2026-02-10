@@ -46,40 +46,12 @@ body {
     @apply text-teal-600 underline decoration-slate-300 underline-offset-2 transition hover:text-teal-700 hover:decoration-teal-500;
   }
 
-  /* 3D viewer: pale blue scanning grid + moving scan beam */
+  /* 3D viewer: pale blue scanning grid overlay (professional depth) */
   .viewer-grid-scan {
-    position: relative;
     background-image: linear-gradient(to right, rgba(148, 203, 255, 0.12) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(148, 203, 255, 0.12) 1px, transparent 1px);
     background-size: 28px 28px;
     pointer-events: none;
-  }
-  .viewer-grid-scan::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      rgba(148, 203, 255, 0.04) 30%,
-      rgba(148, 203, 255, 0.14) 50%,
-      rgba(148, 203, 255, 0.04) 70%,
-      transparent 100%
-    );
-    background-size: 100% 45%;
-    background-repeat: no-repeat;
-    background-position: 0 -50%;
-    animation: viewer-scan-beam 6s linear infinite;
-    pointer-events: none;
-  }
-}
-
-@keyframes viewer-scan-beam {
-  from {
-    background-position: 0 -50%;
-  }
-  to {
-    background-position: 0 150%;
   }
 }
 
