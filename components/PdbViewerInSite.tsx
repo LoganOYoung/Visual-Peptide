@@ -236,7 +236,7 @@ export function PdbViewerInSite({
             }, {});
           }
           if (typeof viewer.addStyle === "function") {
-            viewer.addStyle({}, { clicksphere: { radius: 0.4 } });
+            viewer.addStyle({}, { clicksphere: { radius: 0.25 } });
           }
 
           viewer.setStyle({}, { cartoon: { color: "spectrum" } });
@@ -331,7 +331,7 @@ export function PdbViewerInSite({
     const v = viewerRef.current;
     if (!loaded || !v || chains.length === 0) return;
     const base = { color: "spectrum" as const };
-    const clickSphere = { clicksphere: { radius: 0.4 } };
+    const clickSphere = { clicksphere: { radius: 0.25 } };
     v.setStyle({}, { [displayMode]: base, ...clickSphere });
     chains.forEach((c) => {
       v.setStyle(
