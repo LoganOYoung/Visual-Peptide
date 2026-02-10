@@ -45,6 +45,14 @@ body {
   .link-inline {
     @apply text-teal-600 underline decoration-slate-300 underline-offset-2 transition hover:text-teal-700 hover:decoration-teal-500;
   }
+
+  /* 3D viewer: pale blue scanning grid overlay (professional depth) */
+  .viewer-grid-scan {
+    background-image: linear-gradient(to right, rgba(148, 203, 255, 0.12) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 203, 255, 0.12) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
 }
 
 /* Touch: remove tap highlight, faster tap (no 300ms delay), keep focus ring */

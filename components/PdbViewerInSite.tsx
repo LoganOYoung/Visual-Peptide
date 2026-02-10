@@ -541,11 +541,18 @@ export function PdbViewerInSite({
             </Link>
           </div>
         )}
-        <div
-          ref={containerRef}
-          className="w-full bg-slate-900"
-          style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
-        />
+        <div className="relative w-full" style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}>
+          <div
+            ref={containerRef}
+            className="absolute inset-0 w-full bg-slate-900"
+            style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}
+          />
+          <div
+            className="viewer-grid-scan absolute inset-0 z-[1]"
+            style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}
+            aria-hidden
+          />
+        </div>
         {(residueInfo || hotspotText) && loaded && (
           <div
             className="absolute left-3 bottom-3 z-10 max-w-[320px] rounded-none border border-slate-600 bg-slate-800/95 px-3 py-2.5 text-sm text-slate-200 shadow-lg backdrop-blur-sm"
