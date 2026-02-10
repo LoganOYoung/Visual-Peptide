@@ -107,9 +107,12 @@ export function PdbViewerInSite({
   const [distanceÅ, setDistanceÅ] = useState<number | null>(null);
   const [seqPanelOpen, setSeqPanelOpen] = useState(false);
   const [seqPanelPos, setSeqPanelPos] = useState({ x: 0, y: 0 });
+  const [copyLinkStatus, setCopyLinkStatus] = useState<"idle" | "ok" | "fail">("idle");
   const seqPanelDragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
 
   const id = pdbId.trim().toUpperCase();
+  const shareUrl =
+    typeof window !== "undefined" ? `${window.location.origin}/structure?pdb=${id}` : "";
   const src = `${RCSB_3D_VIEW}/${id}`;
   const downloadPdbUrl = `${RCSB_DOWNLOAD_PDB}/${id}.pdb`;
   const citeUrl = `https://www.rcsb.org/structure/${id}`;
@@ -343,6 +346,10 @@ export function PdbViewerInSite({
     v.render();
   }, [loaded, chains, visibleChains, displayMode, residueInfo]);
 
+  useEffect(() => () => {
+    if (copyLinkTimeoutRef.current) clearTimeout(copyLinkTimeoutRef.current);
+  }, []);
+
   const toggleChain = (c: string) => {
     setVisibleChains((prev) => {
       const next = new Set(prev);
@@ -382,10 +389,43 @@ export function PdbViewerInSite({
     try {
       const dataUrl = v.pngURI();
       if (!dataUrl) return;
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `${id}.png`;
-      a.click();
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            fallbackDownload(dataUrl);
+            return;
+          }
+          ctx.drawImage(img, 0, 0);
+          const pad = Math.max(12, Math.floor(img.width / 80));
+          const fontSize = Math.max(12, Math.floor(img.height / 40));
+          ctx.font = `${fontSize}px system-ui, sans-serif`;
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          ctx.textAlign = "right";
+          ctx.textBaseline = "bottom";
+          ctx.fillText("visualpeptide.com", img.width - pad, img.height - pad);
+          const out = canvas.toDataURL("image/png");
+          const a = document.createElement("a");
+          a.href = out;
+          a.download = `${id}.png`;
+          a.click();
+        } catch {
+          fallbackDownload(dataUrl);
+        }
+      };
+      img.onerror = () => fallbackDownload(dataUrl);
+      img.src = dataUrl;
+
+      function fallbackDownload(url: string) {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${id}.png`;
+        a.click();
+      }
     } catch {
       // ignore
     }
@@ -394,6 +434,25 @@ export function PdbViewerInSite({
   const copyCite = () => {
     const text = `RCSB PDB: ${id} (${citeUrl})`;
     void navigator.clipboard.writeText(text);
+  };
+
+  const copyLinkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const copyShareLink = () => {
+    if (!shareUrl) return;
+    if (copyLinkTimeoutRef.current) clearTimeout(copyLinkTimeoutRef.current);
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(
+        () => setCopyLinkStatus("ok"),
+        () => setCopyLinkStatus("fail")
+      )
+      .finally(() => {
+        copyLinkTimeoutRef.current = setTimeout(() => {
+          setCopyLinkStatus("idle");
+          copyLinkTimeoutRef.current = null;
+        }, 2000);
+      });
   };
 
   const onSeqPanelPointerDown = (e: React.PointerEvent) => {
@@ -425,17 +484,17 @@ export function PdbViewerInSite({
       className={`overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate ${className}`}
       style={{ contain: "layout" }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-slate-200 bg-white px-3 py-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-200 bg-white px-3 py-2 sm:py-1.5">
         <span className="text-sm font-medium text-slate-700 shrink-0">
           {title ?? `PDB ${id}`}
         </span>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {loaded && chains.length > 0 && (
             <>
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Chain</span>
               <div className="flex flex-wrap gap-2">
                 {chains.map((c) => (
-                  <label key={c} className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+                  <label key={c} className="flex cursor-pointer items-center gap-1.5 text-sm text-slate-700">
                     <input
                       type="checkbox"
                       checked={visibleChains.has(c)}
@@ -467,7 +526,8 @@ export function PdbViewerInSite({
               <button
                 type="button"
                 onClick={toggleMeasureMode}
-                className={`rounded px-2 py-1 text-xs font-medium ${measureMode ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
+                className={`min-h-[44px] min-w-[44px] rounded px-2 py-1 text-xs font-medium sm:min-h-0 sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${measureMode ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
+                title="Measure distance between two atoms"
               >
                 Measure
               </button>
@@ -477,7 +537,8 @@ export function PdbViewerInSite({
               <button
                 type="button"
                 onClick={handleExportPng}
-                className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
+                className="min-h-[44px] min-w-[44px] rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300 sm:min-h-0 sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                title="Export current view as PNG (with watermark)"
               >
                 Export PNG
               </button>
@@ -488,7 +549,7 @@ export function PdbViewerInSite({
           href={src}
           target="_blank"
           rel="noopener noreferrer"
-          className="link-inline text-xs shrink-0"
+          className="link-inline inline-flex min-h-[44px] shrink-0 items-center justify-center py-2 text-xs sm:min-h-0"
           aria-label="Open structure in RCSB (new tab)"
         >
           Open in RCSB →
@@ -508,17 +569,37 @@ export function PdbViewerInSite({
             {metadata?.method && (
               <span className="text-slate-500">{metadata.method}</span>
             )}
-            <a href={downloadPdbUrl} download={`${id}.pdb`} className="link-inline text-xs text-teal-600">
+            <a
+              href={downloadPdbUrl}
+              download={`${id}.pdb`}
+              className="link-inline inline-flex min-h-[44px] items-center text-xs text-teal-600 sm:min-h-0"
+            >
               Download PDB
             </a>
-            <button type="button" onClick={copyCite} className="rounded bg-slate-100 px-1.5 py-0.5 text-xs hover:bg-slate-200">
+            {shareUrl && (
+              <button
+                type="button"
+                onClick={copyShareLink}
+                className="min-h-[44px] rounded bg-slate-100 px-2 py-1.5 text-xs hover:bg-slate-200 sm:min-h-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                title="Copy link to this structure"
+              >
+                {copyLinkStatus === "ok" ? "Copied!" : copyLinkStatus === "fail" ? "Copy failed" : "Copy link"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={copyCite}
+              className="min-h-[44px] rounded bg-slate-100 px-2 py-1.5 text-xs hover:bg-slate-200 sm:min-h-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+              title="Copy RCSB citation"
+            >
               Copy Cite
             </button>
             {loaded && chains.length > 0 && (
               <button
                 type="button"
                 onClick={() => setSeqPanelOpen((o) => !o)}
-                className={`flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs ${seqPanelOpen ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                className={`flex min-h-[44px] items-center gap-0.5 rounded px-2 py-1.5 text-xs sm:min-h-0 ${seqPanelOpen ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                title="Toggle sequence panel"
               >
                 Seq ↔ 3D {seqPanelOpen ? "▼" : "▶"}
               </button>
@@ -615,7 +696,7 @@ export function PdbViewerInSite({
                             key={`${ch}-${resi}`}
                             type="button"
                             onClick={() => centerOnResidue(ch, resi)}
-                            className={`rounded px-0.5 font-mono text-xs ${
+                            className={`min-h-[44px] min-w-[44px] rounded px-1.5 py-1 font-mono text-xs sm:min-h-0 sm:min-w-0 ${
                               isHighlight
                                 ? "bg-teal-200 text-teal-900"
                                 : "text-slate-600 hover:bg-slate-100"

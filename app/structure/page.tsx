@@ -175,7 +175,7 @@ export default function StructurePage({
               <li><strong>Seq ↔ 3D:</strong> Open the panel to see residue numbers by chain; click a number to center the view on that residue. Hover in 3D to highlight the same residue in the panel.</li>
               <li><strong>Hover:</strong> Move the mouse over the structure to see full residue info (structure title, PDB ID, chain, residue) in the bottom-left overlay; configured residues show a short description. The hovered residue is highlighted in red (precise region under the cursor).</li>
               <li><strong>Measure:</strong> Turn on Measure, then click two atoms to see the distance (Å) and a red line between them.</li>
-              <li><strong>Export PNG</strong> saves the current view; <strong>Download PDB</strong> and <strong>Copy Cite</strong> are in the bar above the viewer.</li>
+              <li><strong>Copy link</strong> copies this structure’s URL to the clipboard (paste to share). <strong>Export PNG</strong> saves the current view with a watermark; <strong>Download PDB</strong> and <strong>Copy Cite</strong> are in the bar above the viewer.</li>
             </ul>
           </div>
         </details>
@@ -183,9 +183,15 @@ export default function StructurePage({
           <PdbViewerInSite pdbId={displayPdb} minHeight={500} />
         </Suspense>
         <p className="mt-4 text-sm text-slate-600">
-          Copy or share this link to open the same structure (PDB {displayPdb}) directly:{" "}
+          Use <strong>Copy link</strong> in the bar above the viewer to copy this structure’s URL and share it. Or open:{" "}
           <Link href={`/structure?pdb=${displayPdb}`} className="link-inline font-medium">
             /structure?pdb={displayPdb}
+          </Link>
+        </p>
+        <p className="mt-3 text-sm text-slate-600">
+          Need synthesis?{" "}
+          <Link href="/inquiry" className="link-inline font-medium">
+            Request quote / Send to synthesis lab →
           </Link>
         </p>
       </div>
