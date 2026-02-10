@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Light theme (default) — content pages */
+/* Light theme (default) */
 :root {
   --bg: #f8fafc;
   --card: #ffffff;
@@ -12,23 +12,6 @@
   --text-muted: #475569;
   --border: #e2e8f0;
   --ring-offset: #ffffff;
-  --link: #0d9488;
-  --link-hover: #0f766e;
-}
-
-/* Dark theme (tool pages) — 赛博科研：略提亮背景，文字/按钮/边框统一用一套变量 */
-[data-theme="dark"] {
-  --bg: #0f172a;   /* slate-900 */
-  --card: #1e293b; /* slate-800 */
-  --accent: #22d3ee;
-  --accent-dim: #06b6d4;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --border: #334155; /* slate-700，与 card 协调 */
-  --ring-offset: #0f172a;
-  --link: #22d3ee;
-  --link-hover: #67e8f9;
-  --glass-border: rgba(255, 255, 255, 0.12); /* 玻璃边框，与 card 对比适中 */
 }
 
 html {
@@ -46,162 +29,22 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-/* 3D viewer: light blue scanning grid — 视口略深于页面，形成“井”感 */
-.viewer-grid-bg {
-  position: absolute;
-  inset: 0;
-  background-color: #0a0e17;
-  background-image:
-    linear-gradient(to right, rgba(34, 211, 238, 0.12) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(34, 211, 238, 0.12) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-/* Optional: subtle scan-line sweep (respects reduced motion in media query below) */
-.viewer-grid-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(34, 211, 238, 0.06) 50%,
-    transparent 100%
-  );
-  background-size: 100% 120px;
-  animation: viewer-scan 8s linear infinite;
-  pointer-events: none;
-}
-@keyframes viewer-scan {
-  from { transform: translateY(-120px); }
-  to { transform: translateY(100%); }
-}
-
-/* Glass container (Linear/Vercel style): 边框与背景随主题 */
-.card-glass {
-  border-radius: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: color-mix(in srgb, var(--card) 80%, transparent);
-  padding: 1rem;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  backdrop-filter: blur(12px);
-}
-[data-theme="dark"] .card-glass {
-  border-color: var(--glass-border);
-}
-@media (min-width: 640px) {
-  .card-glass { padding: 1.5rem; }
-}
-
 @layer components {
   .card {
     @apply rounded-none border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-6;
   }
   .btn-primary {
-    @apply inline-flex min-h-[44px] items-center justify-center rounded-none px-4 py-2.5 font-medium transition focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] focus-visible:ring-2 focus-visible:ring-offset-2;
-    background-color: var(--accent);
-    color: var(--ring-offset);
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-none bg-teal-600 px-4 py-2.5 font-medium text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] focus-visible:ring-2 focus-visible:ring-offset-2 active:bg-teal-800;
   }
-  .btn-primary:hover { background-color: var(--accent-dim); }
-  .btn-primary:active { filter: brightness(0.9); }
   .btn-secondary {
-    @apply inline-flex min-h-[44px] items-center justify-center rounded-none border px-4 py-2.5 font-medium transition focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] active:opacity-90;
-    border-color: var(--border);
-    background-color: var(--card);
-    color: var(--text);
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-none border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 transition hover:border-teal-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-[var(--ring-offset)] active:bg-slate-100;
   }
-  .btn-secondary:hover { border-color: var(--accent); background-color: var(--bg); }
   .input {
-    @apply w-full rounded-none px-4 py-2.5 text-base focus:outline-none focus:ring-1 min-h-[44px];
-    border: 1px solid var(--border);
-    background-color: var(--card);
-    color: var(--text);
+    @apply w-full rounded-none border border-slate-300 bg-white px-4 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 min-h-[44px];
   }
-  .input::placeholder { color: var(--text-muted); }
-  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .link-inline {
-    @apply underline underline-offset-2 transition;
-    color: var(--link);
+    @apply text-teal-600 underline decoration-slate-300 underline-offset-2 transition hover:text-teal-700 hover:decoration-teal-500;
   }
-  .link-inline:hover { color: var(--link-hover); }
-}
-
-[data-theme="dark"] .btn-primary {
-  color: #0f172a; /* 深色字在 cyan 按钮上，与 --bg 同系 */
-}
-
-/* Dark theme: 文字 — 统一用 --text / --text-muted */
-[data-theme="dark"] .text-slate-900,
-[data-theme="dark"] .text-slate-800,
-[data-theme="dark"] .text-slate-700 {
-  color: var(--text);
-}
-[data-theme="dark"] .text-slate-600,
-[data-theme="dark"] .text-slate-500 {
-  color: var(--text-muted);
-}
-/* Dark theme: 背景 — 与 --bg / --card 协调 */
-[data-theme="dark"] .bg-slate-50,
-[data-theme="dark"] .bg-white {
-  background-color: var(--bg);
-}
-[data-theme="dark"] .bg-slate-50\/80 {
-  background-color: color-mix(in srgb, var(--card) 60%, var(--bg));
-}
-[data-theme="dark"] .bg-slate-200,
-[data-theme="dark"] .bg-slate-100 {
-  background-color: var(--card);
-}
-/* Dark theme: 边框 — 统一用 --border */
-[data-theme="dark"] .border-slate-200,
-[data-theme="dark"] .border-slate-300 {
-  border-color: var(--border);
-}
-/* Dark theme: teal → cyan 系，与 accent 统一 */
-[data-theme="dark"] .hover\:text-teal-600:hover,
-[data-theme="dark"] .group-hover\:text-teal-600:hover {
-  color: var(--link);
-}
-[data-theme="dark"] .hover\:border-teal-500\/50:hover,
-[data-theme="dark"] .hover\:border-teal-400:hover,
-[data-theme="dark"] .border-teal-200 {
-  border-color: var(--accent);
-}
-[data-theme="dark"] .border-teal-300 {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-}
-[data-theme="dark"] .hover\:bg-teal-50:hover,
-[data-theme="dark"] .hover\:bg-slate-50:hover,
-[data-theme="dark"] .hover\:bg-slate-100:hover,
-[data-theme="dark"] .hover\:bg-teal-100:hover {
-  background-color: var(--card);
-}
-[data-theme="dark"] .hover\:bg-teal-50\/30:hover {
-  background-color: color-mix(in srgb, var(--accent) 15%, transparent);
-}
-[data-theme="dark"] .bg-teal-50\/50 {
-  background-color: color-mix(in srgb, var(--accent) 12%, var(--card));
-}
-[data-theme="dark"] .bg-teal-100 {
-  background-color: color-mix(in srgb, var(--accent) 20%, var(--card));
-}
-[data-theme="dark"] .text-teal-600,
-[data-theme="dark"] .text-teal-700,
-[data-theme="dark"] .text-teal-800 {
-  color: var(--link);
-}
-[data-theme="dark"] .shadow-teal-500\/5,
-[data-theme="dark"] .shadow-teal-500\/10 {
-  --tw-shadow-color: color-mix(in srgb, var(--accent) 20%, transparent);
-}
-[data-theme="dark"] .placeholder\:text-slate-400::placeholder {
-  color: var(--text-muted);
-}
-
-/* Dark theme: headings use mono for “data/terminal” feel */
-[data-theme="dark"] h1,
-[data-theme="dark"] h2,
-[data-theme="dark"] h3 {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 /* Touch: remove tap highlight, faster tap (no 300ms delay), keep focus ring */
@@ -218,41 +61,7 @@ body {
 
 /* Focus visible for in-page links (keyboard a11y) */
 a:focus-visible {
-  @apply outline-none ring-2 ring-offset-2;
-  --tw-ring-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--ring-offset), 0 0 0 4px var(--accent);
-}
-
-/* Molecule skeleton loading (replaces spinner for 3D viewer) */
-.viewer-skeleton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-}
-.viewer-skeleton-node {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(34, 211, 238, 0.35);
-  animation: viewer-skeleton-pulse 1.2s ease-in-out infinite both;
-}
-.viewer-skeleton-node:nth-child(1) { animation-delay: 0s; }
-.viewer-skeleton-node:nth-child(2) { animation-delay: 0.15s; }
-.viewer-skeleton-node:nth-child(3) { animation-delay: 0.3s; }
-.viewer-skeleton-node:nth-child(4) { animation-delay: 0.45s; }
-.viewer-skeleton-node:nth-child(5) { animation-delay: 0.6s; }
-.viewer-skeleton-node:nth-child(6) { animation-delay: 0.75s; }
-.viewer-skeleton-node:nth-child(7) { animation-delay: 0.9s; }
-.viewer-skeleton-bond {
-  width: 12px;
-  height: 2px;
-  background: rgba(34, 211, 238, 0.25);
-  border-radius: 1px;
-}
-@keyframes viewer-skeleton-pulse {
-  0%, 100% { opacity: 0.4; transform: scale(0.9); }
-  50% { opacity: 1; transform: scale(1); }
+  @apply outline-none ring-2 ring-teal-500 ring-offset-2 ring-offset-[var(--ring-offset)];
 }
 
 /* Respect reduced motion */
