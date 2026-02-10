@@ -106,7 +106,9 @@ export function PdbViewerInSite({
   const [measureMode, setMeasureMode] = useState(false);
   const [measureAtoms, setMeasureAtoms] = useState<[AtomLike | null, AtomLike | null]>([null, null]);
   const [distanceÅ, setDistanceÅ] = useState<number | null>(null);
-  const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [seqPanelOpen, setSeqPanelOpen] = useState(false);
+  const [seqPanelPos, setSeqPanelPos] = useState({ x: 0, y: 0 });
+  const seqPanelDragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
 
   const id = pdbId.trim().toUpperCase();
   const src = `${RCSB_3D_VIEW}/${id}`;
@@ -395,6 +397,29 @@ export function PdbViewerInSite({
     void navigator.clipboard.writeText(text);
   };
 
+  const onSeqPanelPointerDown = (e: React.PointerEvent) => {
+    if (!(e.target as HTMLElement).closest("[data-seq-title]") || (e.target as HTMLElement).closest("button")) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    seqPanelDragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startPosX: seqPanelPos.x,
+      startPosY: seqPanelPos.y,
+    };
+  };
+  const onSeqPanelPointerMove = (e: React.PointerEvent) => {
+    const d = seqPanelDragRef.current;
+    if (!d) return;
+    setSeqPanelPos({
+      x: d.startPosX + (e.clientX - d.startX),
+      y: d.startPosY + (e.clientY - d.startY),
+    });
+  };
+  const onSeqPanelPointerUp = (e: React.PointerEvent) => {
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    seqPanelDragRef.current = null;
+  };
+
   return (
     <div
       data-viewer="in-site"
@@ -505,15 +530,67 @@ export function PdbViewerInSite({
             {loaded && chains.length > 0 && (
               <button
                 type="button"
-                onClick={() => setDetailsExpanded((e) => !e)}
-                className="flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 hover:bg-slate-200"
+                onClick={() => setSeqPanelOpen((o) => !o)}
+                className={`flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs ${seqPanelOpen ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
               >
-                Seq ↔ 3D {detailsExpanded ? "▼" : "▶"}
+                Seq ↔ 3D {seqPanelOpen ? "▼" : "▶"}
               </button>
             )}
           </div>
-          {detailsExpanded && loaded && chains.length > 0 && (
-            <div className="mt-3 max-h-48 overflow-y-auto border-t border-slate-100 pt-3">
+        </div>
+      )}
+      <div className="relative w-full" style={{ minHeight: `${minHeight}px` }}>
+        {!loaded && !error && (
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"
+            style={{ minHeight: `${minHeight}px` }}
+          >
+            <span className="animate-pulse">Loading 3D structure…</span>
+          </div>
+        )}
+        {error && (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-100/95 text-amber-700 text-sm px-4 z-10"
+            style={{ minHeight: `${minHeight}px` }}
+          >
+            <span>{error}</span>
+            <Link href={src} target="_blank" rel="noopener noreferrer" className="link-inline text-xs" aria-label="Open structure in RCSB (new tab)">
+              Open in RCSB instead →
+            </Link>
+          </div>
+        )}
+        <div
+          ref={containerRef}
+          className="w-full bg-slate-100"
+          style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
+        />
+        {seqPanelOpen && loaded && chains.length > 0 && (
+          <div
+            className="absolute z-20 flex w-[300px] max-h-[40vh] flex-col rounded-lg border border-slate-300 bg-white shadow-lg"
+            style={{
+              right: 8,
+              bottom: 8,
+              transform: `translate(${seqPanelPos.x}px, ${seqPanelPos.y}px)`,
+            }}
+            onPointerDown={onSeqPanelPointerDown}
+            onPointerMove={onSeqPanelPointerMove}
+            onPointerUp={onSeqPanelPointerUp}
+          >
+            <div
+              data-seq-title
+              className="flex cursor-grab items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 active:cursor-grabbing"
+            >
+              <span>Seq ↔ 3D</span>
+              <button
+                type="button"
+                onClick={() => setSeqPanelOpen(false)}
+                className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto p-2">
               <div className="flex flex-wrap gap-2">
                 {chains.map((ch) => {
                   const seq = sequenceByChain[ch];
@@ -545,34 +622,8 @@ export function PdbViewerInSite({
                 })}
               </div>
             </div>
-          )}
-        </div>
-      )}
-      <div className="relative w-full" style={{ minHeight: `${minHeight}px` }}>
-        {!loaded && !error && (
-          <div
-            className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"
-            style={{ minHeight: `${minHeight}px` }}
-          >
-            <span className="animate-pulse">Loading 3D structure…</span>
           </div>
         )}
-        {error && (
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-100/95 text-amber-700 text-sm px-4 z-10"
-            style={{ minHeight: `${minHeight}px` }}
-          >
-            <span>{error}</span>
-            <Link href={src} target="_blank" rel="noopener noreferrer" className="link-inline text-xs" aria-label="Open structure in RCSB (new tab)">
-              Open in RCSB instead →
-            </Link>
-          </div>
-        )}
-        <div
-          ref={containerRef}
-          className="w-full bg-slate-100"
-          style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
-        />
       </div>
     </div>
   );
