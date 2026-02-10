@@ -4,8 +4,6 @@ import type { Metadata } from "next";
 import { QuickSearch } from "@/components/QuickSearch";
 import { PurityPulse } from "@/components/PurityPulse";
 import { HeroTrajectoryView } from "@/components/HeroTrajectoryView";
-import { HomeTrajectoryFrames } from "@/components/HomeTrajectoryFrames";
-import { HomeSyringeVisual } from "@/components/HomeSyringeVisual";
 import { getCanonicalUrl } from "@/lib/site";
 
 const canonical = getCanonicalUrl("/");
@@ -19,13 +17,12 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
-/** Five full-screen sections (replacing Tools grid). Visual + text + CTA; mobile: same screen. */
-const HOME_SECTIONS = [
-  { id: "recon", href: "/tools/calculator", title: "Recon & Dosing", desc: "Concentration, diluent volume, dose per injection, syringe units (0.3 / 0.5 / 1 mL).", cta: "Open calculator", visual: "recon", imageRight: false },
-  { id: "library", href: "/peptides", title: "Peptide Library", desc: "Browse by category: Metabolic, Repair, Cognitive. Search by name, CAS, or sequence.", cta: "Peptide Library", visual: "library", imageRight: true },
-  { id: "3d", href: "/structure", title: "3D Structure", desc: "View structures in-site. Measure, export, and cite.", cta: "Open 3D structure", visual: "3d", imageRight: false },
-  { id: "verify", href: "/verify", title: "Purity & Verify", desc: "Third-party testing (Janoshik). Verify batch reports by task ID.", cta: "Open Verify", visual: "verify", imageRight: true },
-  { id: "syringe", href: "/tools/syringe-planner", title: "Syringe Planner", desc: "See exactly where to draw. Visual syringe with fill level for your dose.", cta: "Open Syringe Planner", visual: "syringe", imageRight: false },
+const TOOL_CARDS = [
+  { href: "/tools/calculator", title: "Recon & Dosing", desc: "Concentration, diluent volume, dose per injection, syringe units (0.3 / 0.5 / 1 mL).", icon: "🧮" },
+  { href: "/peptides", title: "Peptide Library", desc: "Browse by category: Metabolic, Repair, Cognitive. Search by name, CAS, or sequence.", icon: "📋" },
+  { href: "/structure", title: "3D Structure", desc: "View structures in-site. Measure, export, and cite.", icon: "🧬" },
+  { href: "/verify", title: "Purity & Verify", desc: "Third-party testing (Janoshik). Verify batch reports by task ID.", icon: "✓" },
+  { href: "/tools/syringe-planner", title: "Syringe Planner", desc: "See exactly where to draw. Visual syringe with fill level for your dose.", icon: "💉" },
 ] as const;
 
 const POPULAR_PEPTIDES = [
@@ -108,41 +105,43 @@ export default function HomePage() {
         <HeroTrajectoryView />
       </Suspense>
 
-      {/* Five full-screen sections: visual + text + CTA; mobile: same screen */}
-      {HOME_SECTIONS.map((item) => (
-        <section
-          key={item.id}
-          className="border-t border-slate-200 md:min-h-screen"
-          aria-labelledby={`section-${item.id}-heading`}
-        >
-          <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-col px-4 py-10 sm:py-14 md:min-h-screen md:grid md:grid-cols-2 md:items-center md:gap-10 md:py-16">
-            {/* Visual column — order second on desktop when imageRight */}
-            <div className={`flex justify-center md:flex-none ${item.imageRight ? "md:order-2" : ""}`}>
-              {item.visual === "3d" && <HomeTrajectoryFrames />}
-              {item.visual === "syringe" && <HomeSyringeVisual />}
-              {item.visual !== "3d" && item.visual !== "syringe" && (
-                <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-none bg-slate-100 sm:aspect-video md:aspect-[4/3]">
-                  <span className="text-6xl opacity-50 sm:text-7xl" aria-hidden>
-                    {item.visual === "recon" ? "🧮" : item.visual === "library" ? "📋" : "✓"}
-                  </span>
-                </div>
-              )}
-            </div>
-            {/* Text + CTA column — same screen as visual on mobile */}
-            <div className={`mt-6 flex flex-col justify-center md:mt-0 md:py-0 ${item.imageRight ? "md:order-1" : ""}`}>
-              <h2 id={`section-${item.id}-heading`} className="text-xl font-semibold text-slate-900 sm:text-2xl">
-                {item.title}
-              </h2>
-              <p className="mt-2 text-slate-600 sm:text-base">{item.desc}</p>
-              <p className="mt-4">
-                <Link href={item.href} className="btn-primary">
-                  {item.cta}
-                </Link>
-              </p>
-            </div>
-          </div>
-        </section>
-      ))}
+      {/* Tools */}
+      <section
+        className="mx-auto max-w-6xl px-4 py-10 sm:py-14"
+        aria-labelledby="tools-heading"
+      >
+        <h2 id="tools-heading" className="text-xl font-semibold text-slate-900 sm:text-2xl">
+          Tools & reference
+        </h2>
+        <p className="mt-1 text-slate-600">
+          Concentration and dose, peptide library, 3D structure, and purity verification.{" "}
+          <Link href="/tools" className="link-inline font-medium">All tools →</Link>
+        </p>
+        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-6">
+          {TOOL_CARDS.map((item, i) => {
+            const isMain = i < 2;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`card group flex min-h-[140px] flex-col transition hover:shadow-lg ${
+                  isMain
+                    ? "border-teal-300 bg-teal-50/50 hover:border-teal-400 hover:shadow-teal-500/10 sm:col-span-3"
+                    : "hover:border-teal-500/50 hover:shadow-teal-500/5 sm:col-span-2"
+                }`}
+              >
+                <span className="text-2xl" aria-hidden>
+                  {item.icon}
+                </span>
+                <h3 className={`mt-3 font-semibold text-slate-900 group-hover:text-teal-600 ${isMain ? "text-lg" : ""}`}>
+                  {item.title}
+                </h3>
+                <p className="mt-1 flex-1 text-sm text-slate-600">{item.desc}</p>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Popular peptides + Purity Pulse */}
       <section
