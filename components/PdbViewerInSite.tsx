@@ -107,12 +107,9 @@ export function PdbViewerInSite({
   const [distanceÅ, setDistanceÅ] = useState<number | null>(null);
   const [seqPanelOpen, setSeqPanelOpen] = useState(false);
   const [seqPanelPos, setSeqPanelPos] = useState({ x: 0, y: 0 });
-  const [copyLinkStatus, setCopyLinkStatus] = useState<"idle" | "ok" | "fail">("idle");
   const seqPanelDragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
 
   const id = pdbId.trim().toUpperCase();
-  const shareUrl =
-    typeof window !== "undefined" ? `${window.location.origin}/structure?pdb=${id}` : "";
   const src = `${RCSB_3D_VIEW}/${id}`;
   const downloadPdbUrl = `${RCSB_DOWNLOAD_PDB}/${id}.pdb`;
   const citeUrl = `https://www.rcsb.org/structure/${id}`;
@@ -346,10 +343,6 @@ export function PdbViewerInSite({
     v.render();
   }, [loaded, chains, visibleChains, displayMode, residueInfo]);
 
-  useEffect(() => () => {
-    if (copyLinkTimeoutRef.current) clearTimeout(copyLinkTimeoutRef.current);
-  }, []);
-
   const toggleChain = (c: string) => {
     setVisibleChains((prev) => {
       const next = new Set(prev);
@@ -436,25 +429,6 @@ export function PdbViewerInSite({
     void navigator.clipboard.writeText(text);
   };
 
-  const copyLinkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const copyShareLink = () => {
-    if (!shareUrl) return;
-    if (copyLinkTimeoutRef.current) clearTimeout(copyLinkTimeoutRef.current);
-    navigator.clipboard
-      .writeText(shareUrl)
-      .then(
-        () => setCopyLinkStatus("ok"),
-        () => setCopyLinkStatus("fail")
-      )
-      .finally(() => {
-        copyLinkTimeoutRef.current = setTimeout(() => {
-          setCopyLinkStatus("idle");
-          copyLinkTimeoutRef.current = null;
-        }, 2000);
-      });
-  };
-
   const onSeqPanelPointerDown = (e: React.PointerEvent) => {
     if (!(e.target as HTMLElement).closest("[data-seq-title]") || (e.target as HTMLElement).closest("button")) return;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -481,16 +455,17 @@ export function PdbViewerInSite({
   return (
     <div
       data-viewer="in-site"
-      className={`overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate ${className}`}
+      className={`flex overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate flex-col md:flex-row ${className}`}
       style={{ contain: "layout" }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-200 bg-white px-3 py-2 sm:py-1.5">
-        <span className="text-sm font-medium text-slate-700 shrink-0">
-          {title ?? `PDB ${id}`}
-        </span>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="flex flex-1 min-w-0 flex-col">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-slate-200 bg-white px-3 py-2">
+          <span className="text-sm font-medium text-slate-700 shrink-0">
+            {title ?? `PDB ${id}`}
+          </span>
           {loaded && chains.length > 0 && (
             <>
+              <span className="text-slate-300">|</span>
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Chain</span>
               <div className="flex flex-wrap gap-2">
                 {chains.map((c) => (
@@ -526,7 +501,7 @@ export function PdbViewerInSite({
               <button
                 type="button"
                 onClick={toggleMeasureMode}
-                className={`min-h-[44px] min-w-[44px] rounded px-2 py-1 text-xs font-medium sm:min-h-0 sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${measureMode ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
+                className={`rounded px-2 py-1 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${measureMode ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
                 title="Measure distance between two atoms"
               >
                 Measure
@@ -534,80 +509,10 @@ export function PdbViewerInSite({
               {distanceÅ != null && (
                 <span className="text-sm font-medium text-slate-700">{distanceÅ.toFixed(2)} Å</span>
               )}
-              <button
-                type="button"
-                onClick={handleExportPng}
-                className="min-h-[44px] min-w-[44px] rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300 sm:min-h-0 sm:min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-                title="Export current view as PNG (with watermark)"
-              >
-                Export PNG
-              </button>
             </>
           )}
         </div>
-        <Link
-          href={src}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-inline inline-flex min-h-[44px] shrink-0 items-center justify-center py-2 text-xs sm:min-h-0"
-          aria-label="Open structure in RCSB (new tab)"
-        >
-          Open in RCSB →
-        </Link>
-      </div>
-      {(metadata || (loaded && Object.keys(sequenceByChain).length > 0)) && (
-        <div className="border-b border-slate-200 bg-white px-4 py-2 text-sm text-slate-700">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            {metadata?.title && (
-              <span className="max-w-[40ch] truncate font-medium" title={metadata.title}>
-                {metadata.title}
-              </span>
-            )}
-            {metadata?.resolution != null && (
-              <span className="text-slate-500">{metadata.resolution} Å</span>
-            )}
-            {metadata?.method && (
-              <span className="text-slate-500">{metadata.method}</span>
-            )}
-            <a
-              href={downloadPdbUrl}
-              download={`${id}.pdb`}
-              className="link-inline inline-flex min-h-[44px] items-center text-xs text-teal-600 sm:min-h-0"
-            >
-              Download PDB
-            </a>
-            {shareUrl && (
-              <button
-                type="button"
-                onClick={copyShareLink}
-                className="min-h-[44px] rounded bg-slate-100 px-2 py-1.5 text-xs hover:bg-slate-200 sm:min-h-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-                title="Copy link to this structure"
-              >
-                {copyLinkStatus === "ok" ? "Copied!" : copyLinkStatus === "fail" ? "Copy failed" : "Copy link"}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={copyCite}
-              className="min-h-[44px] rounded bg-slate-100 px-2 py-1.5 text-xs hover:bg-slate-200 sm:min-h-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-              title="Copy RCSB citation"
-            >
-              Copy Cite
-            </button>
-            {loaded && chains.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setSeqPanelOpen((o) => !o)}
-                className={`flex min-h-[44px] items-center gap-0.5 rounded px-2 py-1.5 text-xs sm:min-h-0 ${seqPanelOpen ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-                title="Toggle sequence panel"
-              >
-                Seq ↔ 3D {seqPanelOpen ? "▼" : "▶"}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-      <div className="relative w-full" style={{ minHeight: `${minHeight}px` }}>
+        <div className="relative w-full flex-1 min-h-0" style={{ minHeight: `${minHeight}px` }}>
         {!loaded && !error && (
           <div
             className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"
@@ -714,7 +619,69 @@ export function PdbViewerInSite({
             </div>
           </div>
         )}
+        </div>
       </div>
+      <aside
+        className="flex flex-shrink-0 flex-row flex-wrap gap-2 border-t border-slate-200 bg-white p-3 md:flex-col md:border-l md:border-t-0 md:w-44 md:gap-1.5"
+        aria-label="Actions"
+      >
+        {metadata && (
+          <div className="w-full border-b border-slate-100 pb-2 text-xs text-slate-600 md:mb-0">
+            {metadata.title && (
+              <div className="truncate font-medium text-slate-700" title={metadata.title}>
+                {metadata.title}
+              </div>
+            )}
+            <div className="mt-0.5">
+              {metadata.resolution != null && <span>{metadata.resolution} Å</span>}
+              {metadata.resolution != null && metadata?.method && " · "}
+              {metadata?.method && <span>{metadata.method}</span>}
+            </div>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={handleExportPng}
+          className="min-h-[44px] rounded bg-slate-100 px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-200 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          title="Export current view as PNG (with watermark)"
+        >
+          Export PNG
+        </button>
+        <a
+          href={downloadPdbUrl}
+          download={`${id}.pdb`}
+          className="flex min-h-[44px] items-center rounded bg-slate-100 px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-200 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+        >
+          Download PDB
+        </a>
+        <button
+          type="button"
+          onClick={copyCite}
+          className="min-h-[44px] rounded bg-slate-100 px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-200 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          title="Copy RCSB citation"
+        >
+          Copy Cite
+        </button>
+        {loaded && Object.keys(sequenceByChain).length > 0 && (
+          <button
+            type="button"
+            onClick={() => setSeqPanelOpen((o) => !o)}
+            className={`min-h-[44px] w-full rounded px-3 py-2 text-left text-xs font-medium md:min-h-0 md:py-1.5 ${seqPanelOpen ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            title="Toggle sequence panel"
+          >
+            Seq ↔ 3D {seqPanelOpen ? "▼" : "▶"}
+          </button>
+        )}
+        <Link
+          href={src}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto flex min-h-[44px] items-center rounded px-3 py-2 text-left text-xs font-medium text-teal-600 hover:bg-teal-50 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          aria-label="Open structure in RCSB (new tab)"
+        >
+          Open in RCSB →
+        </Link>
+      </aside>
     </div>
   );
 }
