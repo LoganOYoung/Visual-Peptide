@@ -166,7 +166,12 @@ export function PdbViewerInSite({
     const run = ($3Dmol: NonNullable<Window["$3Dmol"]>) => {
       if (cancelled || !el) return;
       try {
-        viewer = $3Dmol.createViewer(el, { backgroundColor: "0xf1f5f9" });
+        // Transparent background so viewer-grid-bg (cyan scan grid) shows through in dark theme
+        const dark = typeof document !== "undefined" && document.body?.dataset?.theme === "dark";
+        viewer = $3Dmol.createViewer(el, {
+          backgroundColor: dark ? "0x0a0e17" : "0xf1f5f9",
+          ...(dark && { backgroundAlpha: 0 }),
+        } as { backgroundColor: string; backgroundAlpha?: number });
         viewerRef.current = viewer;
       } catch (e) {
         if (!cancelled) {
@@ -452,35 +457,51 @@ export function PdbViewerInSite({
     seqPanelDragRef.current = null;
   };
 
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    setIsDark(document.body?.dataset?.theme === "dark");
+    const observer = new MutationObserver(() => {
+      setIsDark(document.body?.dataset?.theme === "dark");
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div
       data-viewer="in-site"
-      className={`flex overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate flex-col md:flex-row ${className}`}
+      className={`flex overflow-hidden rounded-none border-2 isolate flex-col md:flex-row ${className} ${
+        isDark ? "border-white/10 bg-[var(--card)]/80 backdrop-blur-md" : "border-slate-200 bg-slate-100"
+      }`}
       style={{ contain: "layout" }}
     >
       <div className="flex flex-1 min-w-0 flex-col">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-slate-200 bg-white px-3 py-2">
-          <span className="text-sm font-medium text-slate-700 shrink-0">
+        <div
+          className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b px-3 py-2 ${
+            isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white"
+          }`}
+        >
+          <span className={`text-sm font-medium shrink-0 ${isDark ? "text-[var(--text)] font-mono" : "text-slate-700"}`}>
             {title ?? `PDB ${id}`}
           </span>
           {loaded && chains.length > 0 && (
             <>
-              <span className="text-slate-300">|</span>
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Chain</span>
+              <span className={isDark ? "text-white/30" : "text-slate-300"}>|</span>
+              <span className={`text-xs font-medium uppercase tracking-wide ${isDark ? "text-[var(--text-muted)]" : "text-slate-500"}`}>Chain</span>
               <div className="flex flex-wrap gap-2">
                 {chains.map((c) => (
-                  <label key={c} className="flex cursor-pointer items-center gap-1.5 text-sm text-slate-700">
+                  <label key={c} className={`flex cursor-pointer items-center gap-1.5 text-sm ${isDark ? "text-[var(--text)]" : "text-slate-700"}`}>
                     <input
                       type="checkbox"
                       checked={visibleChains.has(c)}
                       onChange={() => toggleChain(c)}
-                      className="rounded border-slate-300"
+                      className={`rounded ${isDark ? "border-white/30 accent-cyan-400" : "border-slate-300"}`}
                     />
                     {c}
                   </label>
                 ))}
               </div>
-              <span className="text-slate-300">|</span>
+              <span className={isDark ? "text-white/30" : "text-slate-300"}>|</span>
               <div className="flex flex-wrap gap-1">
                 {DISPLAY_MODES.map((mode) => (
                   <button
@@ -489,41 +510,59 @@ export function PdbViewerInSite({
                     onClick={() => setDisplayMode(mode)}
                     className={`rounded px-2 py-1 text-xs font-medium capitalize ${
                       displayMode === mode
-                        ? "bg-teal-600 text-white"
-                        : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                        ? isDark ? "bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-400/50" : "bg-teal-600 text-white"
+                        : isDark ? "bg-white/10 text-[var(--text-muted)] hover:bg-white/15 hover:text-[var(--text)]" : "bg-slate-200 text-slate-700 hover:bg-slate-300"
                     }`}
                   >
                     {mode}
                   </button>
                 ))}
               </div>
-              <span className="text-slate-300">|</span>
+              <span className={isDark ? "text-white/30" : "text-slate-300"}>|</span>
               <button
                 type="button"
                 onClick={toggleMeasureMode}
-                className={`rounded px-2 py-1 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${measureMode ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-700 hover:bg-slate-300"}`}
+                className={`rounded px-2 py-1 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ring-offset)] ${
+                  measureMode ? "bg-amber-600 text-white" : isDark ? "bg-white/10 text-[var(--text-muted)] hover:bg-white/15" : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                }`}
                 title="Measure distance between two atoms"
               >
                 Measure
               </button>
               {distanceÅ != null && (
-                <span className="text-sm font-medium text-slate-700">{distanceÅ.toFixed(2)} Å</span>
+                <span className={`text-sm font-medium font-mono ${isDark ? "text-cyan-400" : "text-slate-700"}`}>{distanceÅ.toFixed(2)} Å</span>
               )}
             </>
           )}
         </div>
         <div className="relative w-full flex-1 min-h-0" style={{ minHeight: `${minHeight}px` }}>
+        {/* Cyan scan grid behind 3D viewport (dark theme) */}
+        {isDark && (
+          <div
+            className="viewer-grid-bg absolute inset-0 z-0"
+            aria-hidden="true"
+          />
+        )}
         {!loaded && !error && (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"
+            className={`absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 ${isDark ? "bg-[#0a0e17]/95 text-cyan-300/90" : "bg-slate-100/95 text-slate-600"}`}
             style={{ minHeight: `${minHeight}px` }}
           >
-            <span className="animate-pulse">Loading 3D structure…</span>
+            <div className="viewer-skeleton" aria-hidden="true">
+              <span className="viewer-skeleton-node" />
+              <span className="viewer-skeleton-bond" />
+              <span className="viewer-skeleton-node" />
+              <span className="viewer-skeleton-bond" />
+              <span className="viewer-skeleton-node" />
+              <span className="viewer-skeleton-bond" />
+              <span className="viewer-skeleton-node" />
+            </div>
+            <span className={`text-xs font-mono ${isDark ? "text-cyan-400/80" : ""}`}>Loading 3D structure…</span>
           </div>
         )}
         {error && (
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-100/95 text-amber-700 text-sm px-4 z-10"
+            className={`absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm px-4 z-10 ${isDark ? "bg-[#0a0e17]/95 text-amber-400" : "bg-slate-100/95 text-amber-700"}`}
             style={{ minHeight: `${minHeight}px` }}
           >
             <span>{error}</span>
@@ -534,34 +573,38 @@ export function PdbViewerInSite({
         )}
         <div
           ref={containerRef}
-          className="w-full bg-slate-100"
+          className={`w-full relative z-[1] ${isDark ? "bg-transparent" : "bg-slate-100"}`}
           style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
         />
         {(residueInfo || hotspotText) && loaded && (
           <div
-            className="absolute left-3 bottom-3 z-10 max-w-[320px] rounded-lg border border-slate-300 bg-white/95 px-3 py-2.5 text-sm text-slate-700 shadow-md backdrop-blur-sm"
+            className={`absolute left-3 bottom-3 z-10 max-w-[320px] rounded-lg border px-3 py-2.5 text-sm shadow-md backdrop-blur-md ${
+              isDark ? "border-white/10 bg-[var(--card)]/90 text-[var(--text)]" : "border-slate-300 bg-white/95 text-slate-700"
+            }`}
             aria-live="polite"
           >
             {residueInfo && (
               <>
                 {metadata?.title && (
-                  <div className="text-xs text-slate-600 leading-snug border-b border-slate-200 pb-1.5 mb-1.5">
+                  <div className={`text-xs leading-snug border-b pb-1.5 mb-1.5 ${isDark ? "text-[var(--text-muted)] border-white/10" : "text-slate-600 border-slate-200"}`}>
                     {metadata.title}
                   </div>
                 )}
-                <div className="font-mono text-xs text-slate-800 leading-snug">
+                <div className={`font-mono text-xs leading-snug ${isDark ? "text-cyan-300" : "text-slate-800"}`}>
                   {id} | Model 1 | Chain {residueInfo.chain} | {residueInfo.resn} {residueInfo.resi}
                 </div>
               </>
             )}
             {hotspotText && (
-              <p className="mt-1.5 text-slate-600 text-xs leading-snug">{hotspotText}</p>
+              <p className={`mt-1.5 text-xs leading-snug ${isDark ? "text-[var(--text-muted)]" : "text-slate-600"}`}>{hotspotText}</p>
             )}
           </div>
         )}
         {seqPanelOpen && loaded && chains.length > 0 && (
           <div
-            className="absolute z-20 flex w-[300px] max-h-[40vh] flex-col rounded-lg border border-slate-300 bg-white shadow-lg"
+            className={`absolute z-20 flex w-[300px] max-h-[40vh] flex-col rounded-lg border shadow-lg ${
+              isDark ? "border-white/10 bg-[var(--card)]/95 backdrop-blur-md" : "border-slate-300 bg-white"
+            }`}
             style={{
               right: 8,
               bottom: 8,
@@ -573,13 +616,15 @@ export function PdbViewerInSite({
           >
             <div
               data-seq-title
-              className="flex cursor-grab items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 active:cursor-grabbing"
+              className={`flex cursor-grab items-center justify-between border-b px-3 py-2 text-sm font-medium active:cursor-grabbing ${
+                isDark ? "border-white/10 bg-white/5 text-[var(--text)]" : "border-slate-200 bg-slate-50 text-slate-700"
+              }`}
             >
               <span>Seq ↔ 3D</span>
               <button
                 type="button"
                 onClick={() => setSeqPanelOpen(false)}
-                className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                className={`rounded p-1 ${isDark ? "text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text)]" : "text-slate-500 hover:bg-slate-200 hover:text-slate-700"}`}
                 aria-label="Close"
               >
                 ×
@@ -592,7 +637,7 @@ export function PdbViewerInSite({
                   if (!seq?.length) return null;
                   return (
                     <div key={ch} className="flex flex-wrap items-baseline gap-0.5">
-                      <span className="mr-1 text-xs font-medium text-slate-500">Chain {ch}</span>
+                      <span className={`mr-1 text-xs font-medium ${isDark ? "text-[var(--text-muted)]" : "text-slate-500"}`}>Chain {ch}</span>
                       {seq.map(({ resi, resn }) => {
                         const isHighlight =
                           residueInfo?.chain === ch && residueInfo?.resi === resi;
@@ -603,8 +648,8 @@ export function PdbViewerInSite({
                             onClick={() => centerOnResidue(ch, resi)}
                             className={`min-h-[44px] min-w-[44px] rounded px-1.5 py-1 font-mono text-xs sm:min-h-0 sm:min-w-0 ${
                               isHighlight
-                                ? "bg-teal-200 text-teal-900"
-                                : "text-slate-600 hover:bg-slate-100"
+                                ? isDark ? "bg-cyan-500/30 text-cyan-200 ring-1 ring-cyan-400/50" : "bg-teal-200 text-teal-900"
+                                : isDark ? "text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text)]" : "text-slate-600 hover:bg-slate-100"
                             }`}
                             title={`${resn} ${ch}${resi}`}
                           >
@@ -622,13 +667,15 @@ export function PdbViewerInSite({
         </div>
       </div>
       <aside
-        className="flex flex-shrink-0 flex-row flex-wrap gap-2 border-t border-slate-200 bg-white p-3 md:flex-col md:border-l md:border-t-0 md:w-44 md:gap-1.5"
+        className={`flex flex-shrink-0 flex-row flex-wrap gap-2 border-t p-3 md:flex-col md:border-l md:border-t-0 md:w-44 md:gap-1.5 ${
+          isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white"
+        }`}
         aria-label="Actions"
       >
         {metadata && (
-          <div className="w-full border-b border-slate-100 pb-2 text-xs text-slate-600 md:mb-0">
+          <div className={`w-full border-b pb-2 text-xs md:mb-0 ${isDark ? "border-white/10 text-[var(--text-muted)]" : "border-slate-100 text-slate-600"}`}>
             {metadata.title && (
-              <div className="truncate font-medium text-slate-700" title={metadata.title}>
+              <div className={`truncate font-medium ${isDark ? "text-[var(--text)]" : "text-slate-700"}`} title={metadata.title}>
                 {metadata.title}
               </div>
             )}
@@ -642,7 +689,9 @@ export function PdbViewerInSite({
         <button
           type="button"
           onClick={handleExportPng}
-          className="min-h-[44px] rounded bg-slate-100 px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-200 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className={`min-h-[44px] rounded px-3 py-2 text-left text-xs font-medium md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            isDark ? "bg-white/10 text-[var(--text)] hover:bg-white/15 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]" : "bg-slate-100 text-slate-700 hover:bg-slate-200 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          }`}
           title="Export current view as PNG (with watermark)"
         >
           Export PNG
@@ -650,14 +699,18 @@ export function PdbViewerInSite({
         <a
           href={downloadPdbUrl}
           download={`${id}.pdb`}
-          className="flex min-h-[44px] items-center rounded bg-slate-100 px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-200 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className={`flex min-h-[44px] items-center rounded px-3 py-2 text-left text-xs font-medium md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            isDark ? "bg-white/10 text-[var(--text)] hover:bg-white/15 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]" : "bg-slate-100 text-slate-700 hover:bg-slate-200 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          }`}
         >
           Download PDB
         </a>
         <button
           type="button"
           onClick={copyCite}
-          className="min-h-[44px] rounded bg-slate-100 px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-200 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className={`min-h-[44px] rounded px-3 py-2 text-left text-xs font-medium md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            isDark ? "bg-white/10 text-[var(--text)] hover:bg-white/15 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]" : "bg-slate-100 text-slate-700 hover:bg-slate-200 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          }`}
           title="Copy RCSB citation"
         >
           Copy Cite
@@ -666,7 +719,9 @@ export function PdbViewerInSite({
           <button
             type="button"
             onClick={() => setSeqPanelOpen((o) => !o)}
-            className={`min-h-[44px] w-full rounded px-3 py-2 text-left text-xs font-medium md:min-h-0 md:py-1.5 ${seqPanelOpen ? "bg-teal-100 text-teal-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            className={`min-h-[44px] w-full rounded px-3 py-2 text-left text-xs font-medium md:min-h-0 md:py-1.5 ${
+              seqPanelOpen ? (isDark ? "bg-cyan-500/20 text-cyan-300" : "bg-teal-100 text-teal-700") : isDark ? "bg-white/10 text-[var(--text-muted)] hover:bg-white/15" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
             title="Toggle sequence panel"
           >
             Seq ↔ 3D {seqPanelOpen ? "▼" : "▶"}
@@ -674,7 +729,9 @@ export function PdbViewerInSite({
         )}
         <a
           href="#how-to-use"
-          className="flex min-h-[44px] items-center rounded px-3 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className={`flex min-h-[44px] items-center rounded px-3 py-2 text-left text-xs font-medium md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            isDark ? "text-[var(--text-muted)] hover:bg-white/10 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]" : "text-slate-600 hover:bg-slate-100 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          }`}
         >
           How to use
         </a>
@@ -682,7 +739,9 @@ export function PdbViewerInSite({
           href={src}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-auto flex min-h-[44px] items-center rounded px-3 py-2 text-left text-xs font-medium text-teal-600 hover:bg-teal-50 md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className={`mt-auto flex min-h-[44px] items-center rounded px-3 py-2 text-left text-xs font-medium md:min-h-0 md:py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            isDark ? "text-cyan-400 hover:bg-cyan-500/10 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]" : "text-teal-600 hover:bg-teal-50 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          }`}
           aria-label="Open structure in RCSB (new tab)"
         >
           Open in RCSB →

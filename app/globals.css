@@ -45,6 +45,49 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+/* 3D viewer: light blue scanning grid (赛博科研) — use as background of viewer viewport */
+.viewer-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-color: #0a0e17;
+  background-image:
+    linear-gradient(to right, rgba(34, 211, 238, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 211, 238, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+/* Optional: subtle scan-line sweep (respects reduced motion in media query below) */
+.viewer-grid-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(34, 211, 238, 0.06) 50%,
+    transparent 100%
+  );
+  background-size: 100% 120px;
+  animation: viewer-scan 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes viewer-scan {
+  from { transform: translateY(-120px); }
+  to { transform: translateY(100%); }
+}
+
+/* Glass container (Linear/Vercel style): border-white/10 + backdrop-blur */
+.card-glass {
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: color-mix(in srgb, var(--card) 80%, transparent);
+  padding: 1rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  backdrop-filter: blur(12px);
+}
+@media (min-width: 640px) {
+  .card-glass { padding: 1.5rem; }
+}
+
 @layer components {
   .card {
     @apply rounded-none border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-6;
@@ -152,6 +195,38 @@ a:focus-visible {
   @apply outline-none ring-2 ring-offset-2;
   --tw-ring-color: var(--accent);
   box-shadow: 0 0 0 2px var(--ring-offset), 0 0 0 4px var(--accent);
+}
+
+/* Molecule skeleton loading (replaces spinner for 3D viewer) */
+.viewer-skeleton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.viewer-skeleton-node {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.35);
+  animation: viewer-skeleton-pulse 1.2s ease-in-out infinite both;
+}
+.viewer-skeleton-node:nth-child(1) { animation-delay: 0s; }
+.viewer-skeleton-node:nth-child(2) { animation-delay: 0.15s; }
+.viewer-skeleton-node:nth-child(3) { animation-delay: 0.3s; }
+.viewer-skeleton-node:nth-child(4) { animation-delay: 0.45s; }
+.viewer-skeleton-node:nth-child(5) { animation-delay: 0.6s; }
+.viewer-skeleton-node:nth-child(6) { animation-delay: 0.75s; }
+.viewer-skeleton-node:nth-child(7) { animation-delay: 0.9s; }
+.viewer-skeleton-bond {
+  width: 12px;
+  height: 2px;
+  background: rgba(34, 211, 238, 0.25);
+  border-radius: 1px;
+}
+@keyframes viewer-skeleton-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
 /* Respect reduced motion */

@@ -75,6 +75,7 @@ export function TrajectoryViewer({
   const [totalFrames, setTotalFrames] = useState(0);
   const [speed, setSpeed] = useState<number>(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
   const viewerRef = useRef<ViewerInstance | null>(null);
   const frameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const frameTextsRef = useRef<string[]>([]);
@@ -139,8 +140,12 @@ export function TrajectoryViewer({
             return;
           }
           let viewer: ViewerInstance;
+          const dark = typeof document !== "undefined" && document.body?.dataset?.theme === "dark";
           try {
-            viewer = $3Dmol.createViewer(el, { backgroundColor: "0xf1f5f9" });
+            viewer = $3Dmol.createViewer(el, {
+              backgroundColor: dark ? "0x0a0e17" : "0xf1f5f9",
+              ...(dark && { backgroundAlpha: 0 }),
+            } as { backgroundColor: string; backgroundAlpha?: number });
           } catch (e) {
             setError("Failed to create viewer");
             return;
@@ -297,6 +302,15 @@ export function TrajectoryViewer({
   };
 
   useEffect(() => {
+    setIsDark(document.body?.dataset?.theme === "dark");
+    const observer = new MutationObserver(() => {
+      setIsDark(document.body?.dataset?.theme === "dark");
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", onFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
@@ -373,28 +387,44 @@ export function TrajectoryViewer({
   return (
     <div
       data-viewer="trajectory"
-      className={`overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate ${className}`}
+      className={`overflow-hidden rounded-none border-2 isolate ${className} ${
+        isDark ? "border-white/10 bg-[var(--card)]/80 backdrop-blur-md" : "border-slate-200 bg-slate-100"
+      }`}
       style={{ contain: "layout" }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 py-2">
-        <span className="text-sm font-medium text-slate-700">{title}</span>
+      <div
+        className={`flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 ${
+          isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white"
+        }`}
+      >
+        <span className={`text-sm font-medium font-mono ${isDark ? "text-[var(--text)]" : "text-slate-700"}`}>
+          {title}
+        </span>
         <div className="flex flex-wrap items-center gap-2">
           {totalFrames > 1 && (
             <>
               <button
                 type="button"
                 onClick={handlePlayPause}
-                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className={`min-h-[44px] rounded px-3 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                  isDark
+                    ? "border border-white/20 bg-white/10 text-[var(--text)] hover:bg-white/15 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]"
+                    : "rounded-none border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                }`}
               >
                 {playing ? "Pause" : "Play"}
               </button>
-              <span className="text-xs text-slate-500">
+              <span className={`text-xs font-mono ${isDark ? "text-cyan-400/90" : "text-slate-500"}`}>
                 Frame {frame + 1} / {totalFrames}
               </span>
               <select
                 value={speed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
-                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:outline-none"
+                className={`min-h-[44px] rounded px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                  isDark
+                    ? "border border-white/20 bg-white/10 text-[var(--text)] focus:border-cyan-500/50 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]"
+                    : "rounded-none border border-slate-300 bg-white text-slate-700 focus:border-teal-500 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                }`}
                 title="Playback speed"
               >
                 <option value={0.5}>0.5×</option>
@@ -409,7 +439,11 @@ export function TrajectoryViewer({
               <button
                 type="button"
                 onClick={handleFullscreen}
-                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className={`min-h-[44px] rounded px-3 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                  isDark
+                    ? "border border-white/20 bg-white/10 text-[var(--text)] hover:bg-white/15 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]"
+                    : "rounded-none border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                }`}
                 title="Fullscreen"
               >
                 {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
@@ -417,7 +451,11 @@ export function TrajectoryViewer({
               <button
                 type="button"
                 onClick={handleScreenshot}
-                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className={`min-h-[44px] rounded px-3 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                  isDark
+                    ? "border border-white/20 bg-white/10 text-[var(--text)] hover:bg-white/15 focus-visible:ring-cyan-500 focus-visible:ring-offset-[var(--ring-offset)]"
+                    : "rounded-none border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                }`}
                 title="Download screenshot"
               >
                 Screenshot
@@ -427,17 +465,33 @@ export function TrajectoryViewer({
         </div>
       </div>
       <div ref={wrapperRef} className="relative w-full" style={{ minHeight: `${minHeight}px` }}>
+        {isDark && (
+          <div className="viewer-grid-bg absolute inset-0 z-0" aria-hidden="true" />
+        )}
         {!loaded && !error && (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"
+            className={`absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 ${
+              isDark ? "bg-[#0a0e17]/95 text-cyan-300/90" : "bg-slate-100/95 text-slate-600"
+            }`}
             style={{ minHeight: `${minHeight}px` }}
           >
-            <span className="animate-pulse">Loading trajectory…</span>
+            <div className="viewer-skeleton" aria-hidden="true">
+              <span className="viewer-skeleton-node" />
+              <span className="viewer-skeleton-bond" />
+              <span className="viewer-skeleton-node" />
+              <span className="viewer-skeleton-bond" />
+              <span className="viewer-skeleton-node" />
+              <span className="viewer-skeleton-bond" />
+              <span className="viewer-skeleton-node" />
+            </div>
+            <span className={`text-xs font-mono ${isDark ? "text-cyan-400/80" : ""}`}>Loading trajectory…</span>
           </div>
         )}
         {error && (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-amber-700 text-sm px-4 z-10"
+            className={`absolute inset-0 flex items-center justify-center text-sm px-4 z-10 ${
+              isDark ? "bg-[#0a0e17]/95 text-amber-400" : "bg-slate-100/95 text-amber-700"
+            }`}
             style={{ minHeight: `${minHeight}px` }}
           >
             {error}
@@ -445,21 +499,25 @@ export function TrajectoryViewer({
         )}
         <div
           ref={containerRef}
-          className="w-full bg-slate-100"
+          className={`w-full relative z-[1] ${isDark ? "bg-transparent" : "bg-slate-100"}`}
           style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
         />
       </div>
       {loaded && totalFrames > 1 && totalFrames <= 20 && (
-        <div className="flex flex-wrap gap-1 border-t border-slate-200 bg-white px-4 py-2">
+        <div
+          className={`flex flex-wrap gap-1 border-t px-4 py-2 ${
+            isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white"
+          }`}
+        >
           {Array.from({ length: totalFrames }, (_, i) => (
             <button
               key={i}
               type="button"
               onClick={() => handleFrameSelect(i)}
-              className={`h-7 min-w-[2rem] rounded-none px-2 text-xs font-medium transition ${
+              className={`h-7 min-w-[2rem] rounded px-2 text-xs font-medium font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                 frame === i
-                  ? "bg-teal-600 text-white"
-                  : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                  ? isDark ? "bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-400/50" : "bg-teal-600 text-white"
+                  : isDark ? "border border-white/20 bg-white/10 text-[var(--text-muted)] hover:bg-white/15" : "rounded-none border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
               {i + 1}
