@@ -12,9 +12,9 @@ Assessment of all data sources used in the site (pure frontend; no backend). Las
 | **CAS Registry** | Curated identifiers in `lib/peptides.ts` | Peptide CAS numbers (display, search) | High (official registry) | Per‑peptide (we only store what we curate) | High if verified; no in‑app citation |
 | **Janoshik** | External links only | Verify page, report verification, public database link | Medium (third‑party lab; established in peptide testing) | N/A (we link out) | User must verify on lab site |
 | **In‑house: peptides** | Static data `lib/peptides.ts` | Names, doses, recon, CAS, PDB ID, MW, etc. | Curated; no cited primary source | Limited to ~7 peptides | Depends on curation; “research only” disclaimer present |
-| **In‑house: structureRationale** | Static `lib/structureRationale.ts` | “Why this structure” per PDB | Curated; interpretive | Only 6XBM, 7F9W | **Must match actual PDB entry** (see §3) |
-| **In‑house: structureHotspots** | Static `lib/structureHotspots.ts` | Residue/position descriptions in 3D viewer | Curated; interpretive | Only 6XBM, 7F9W | **Must match actual PDB chain/residue numbering** |
-| **In‑house: structureAlternatives** | Static `lib/structureAlternatives.ts` | “Also useful” PDB suggestions | Curated | Only 6XBM, 7F9W | **Must point to correct PDBs** (see §3) |
+| **In‑house: structureRationale** | Static `lib/structureRationale.ts` | “Why this structure” per PDB | Curated; interpretive | 7KI0, 6XBM, 7F9W | **Must match actual PDB entry** (see §3) |
+| **In‑house: structureHotspots** | Static `lib/structureHotspots.ts` | Residue/position descriptions in 3D viewer | Curated; interpretive | Only 7KI0 (chain B) | **Must match actual PDB chain/residue numbering** |
+| **In‑house: structureAlternatives** | Static `lib/structureAlternatives.ts` | “Also useful” PDB suggestions | Curated | 7KI0→6X18 | **Must point to correct PDBs** (see §3) |
 | **3Dmol.js** | CDN script | 3D viewer rendering | High (widely used, open source) | N/A | High |
 
 ---
@@ -49,7 +49,7 @@ Assessment of all data sources used in the site (pure frontend; no backend). Las
 
 - **Structure rationale / hotspots / alternatives**  
   - **Professionality**: Short, educational; peptide/modification‑focused.  
-  - **Completeness**: Only entries we describe (currently 6XBM, 7F9W).  
+  - **Completeness**: Only entries we describe (7KI0, 6XBM, 7F9W for rationale; 7KI0 for hotspots; 7KI0→6X18 for alternatives).  
   - **Reliability**: **Critical**: Text must describe the **actual** PDB entry (title, chains, biology). See §3.
 
 ---
@@ -62,21 +62,36 @@ Public records indicate:
 - **7F9W** (RCSB page): “Two novel human **anti-CD25 antibodies**…” — i.e. **not** GLP-1 receptor complex.
 - **7KI0**: Literature and RCSB refer to **7KI0** as a **Semaglutide–GLP-1R–Gs** cryo‑EM structure.
 
-Therefore:
+**Fix applied (current state):**
 
-- **Risk**: In the app, **Semaglutide** is linked to **6XBM**, and rationale/hotspots/alternatives for **6XBM** and **7F9W** are written as if they were GLP-1/Semaglutide structures. If 6XBM is SMO-Gi and 7F9W is anti-CD25, then:
-  - `peptides.ts`: Semaglutide `pdbId: "6XBM"` is **wrong**; should point to a Semaglutide/GLP-1R structure (e.g. **7KI0**).
-  - `structureRationale`, `structureHotspots`, `structureAlternatives` for 6XBM and 7F9W describe **different** biology than the actual entries, so they are **misleading**.
+- **Semaglutide** in `peptides.ts` now uses **7KI0** (Semaglutide–GLP-1R–Gs).
+- **structureRationale**: 7KI0 (Semaglutide/GLP-1R); 6XBM and 7F9W kept with **correct** descriptions (SMO-Gi, Anti-CD25).
+- **structureHotspots**: Only **7KI0**, chain **B** (Semaglutide in 7KI0); residue keys B:8, B:12, B:16, B:26, B:31.
+- **structureAlternatives**: Only **7KI0→6X18** (native GLP-1–receptor); 6XBM/7F9W removed from alternatives.
 
-**Recommendation**:  
-1. Confirm on RCSB/wwPDB the true title and contents of **6XBM** and **7F9W**.  
-2. If 6XBM is SMO-Gi: remove or replace Semaglutide’s `pdbId` (e.g. use **7KI0** for Semaglutide) and remove or rewrite rationale/hotspots/alternatives for 6XBM so they match the real entry.  
-3. If 7F9W is anti-CD25: remove or rewrite rationale/hotspots/alternatives for 7F9W; do not present it as GLP-1 receptor complex.  
-4. After changes, re-check that every PDB ID used for “Semaglutide” or “GLP-1” actually corresponds to that structure on RCSB.
+**Recommendation**: When adding new PDBs or peptides, confirm title and biology on RCSB/wwPDB before writing rationale/hotspots/alternatives.
 
 ---
 
-## 4. Recommendations
+## 4. Professional data acquisition checklist
+
+| Data / action | Source / URL | Status |
+|---------------|--------------|--------|
+| **PDB coordinates (3D viewer)** | `https://files.rcsb.org/view/{id}.pdb` | OK — RCSB “view” URL per [File Download Services](https://www.rcsb.org/docs/programmatic-access/file-download-services); Legacy PDB View example: `files.rcsb.org/view/4hhb.pdb`. |
+| **PDB metadata (title, resolution, method)** | `https://data.rcsb.org/rest/v1/core/entry/{id}` | OK — Official RCSB REST API; we use `struct.title`, `rcsb_entry_info.resolution_combined`, `exptl[0].method`. |
+| **PDB download link (user)** | `https://files.rcsb.org/download/{id}.pdb` | OK — RCSB “download” URL per same doc. |
+| **RCSB 3D view link** | `https://www.rcsb.org/3d-view/{id}` | OK — Official structure viewer. |
+| **Cite link** | `https://www.rcsb.org/structure/{id}` | OK — Official structure summary. |
+| **Janoshik verification** | `https://janoshik.com/tests/rawdata/{taskId}` (ReportVerifier) | Confirm — Lab’s main verify page is `janoshik.com/verification/` (task number + unique key). If `/tests/rawdata/{taskId}` does not open a report, consider linking to `janoshik.com/verification/` with copy “Enter your task ID and key on the lab’s page.” |
+| **Janoshik homepage / public DB** | `https://janoshik.com`, `https://public.janoshik.com` | OK — Linked from Verify page. |
+| **Peptide / PDB / rationale / hotspots / alternatives** | Static `lib/` data | OK — Semaglutide→7KI0; rationale/hotspots/alternatives aligned with RCSB entries; 6X18 is GLP-1–receptor (alternative for 7KI0). |
+| **CAS numbers** | Stored in `lib/peptides.ts`; no live fetch | OK — Identifiers only; e.g. 910463-68-2 = Semaglutide (publicly verifiable). |
+
+**Conclusion:** All professional data acquisition paths are correct except Janoshik direct-report URL, which should be confirmed with a real task ID; fallback is to link to `janoshik.com/verification/`.
+
+---
+
+## 5. Recommendations
 
 1. **Fix PDB–content alignment**  
    - Verify 6XBM, 7F9W (and any new IDs) on RCSB/wwPDB.  
@@ -93,7 +108,7 @@ Therefore:
 
 ---
 
-## 5. Conclusion
+## 6. Conclusion
 
 - **Professionality**: RCSB and CAS are professional, authoritative sources; Janoshik is a clear third‑party lab; in‑house data is framed as research/education with disclaimers.  
 - **Completeness**: Scope is intentionally limited (few peptides, few PDBs); no claim of full coverage.  

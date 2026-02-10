@@ -160,6 +160,25 @@ export default function StructurePage({
             )}
           </div>
         )}
+        <details className="group mb-4 rounded-none border border-slate-200 bg-slate-50/80">
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-700 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden className="inline-block transition-transform group-open:rotate-90">▸</span>
+              How to use the 3D viewer
+            </span>
+          </summary>
+          <div className="border-t border-slate-200 px-4 py-3 text-sm text-slate-600">
+            <ul className="list-inside list-disc space-y-1">
+              <li><strong>Rotate & zoom:</strong> Drag to rotate the structure; scroll to zoom in/out.</li>
+              <li><strong>Chains:</strong> Use the checkboxes above the viewer to show or hide each chain.</li>
+              <li><strong>Display mode:</strong> Switch between cartoon, stick, line, or sphere (buttons above the viewer).</li>
+              <li><strong>Seq ↔ 3D:</strong> Open the panel to see residue numbers by chain; click a number to center the view on that residue. Hover in 3D to highlight the same residue in the panel.</li>
+              <li><strong>Hover:</strong> Move the mouse over the structure to see residue name, chain, and number in the bottom-left overlay; configured residues show a short description. The hovered residue is highlighted in red.</li>
+              <li><strong>Measure:</strong> Turn on Measure, then click two atoms to see the distance (Å) and a red line between them.</li>
+              <li><strong>Export PNG</strong> saves the current view; <strong>Download PDB</strong> and <strong>Copy Cite</strong> are in the bar above the viewer.</li>
+            </ul>
+          </div>
+        </details>
         <Suspense fallback={<div className="h-[500px] animate-pulse rounded-none bg-slate-200" />}>
           <PdbViewerInSite pdbId={displayPdb} minHeight={500} />
         </Suspense>
