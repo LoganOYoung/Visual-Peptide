@@ -44,8 +44,8 @@
 
 ## 三、字体与排版
 
-- **无衬线**：系统无衬线或 Geist Sans（若已配置），用于界面与正文。
-- **等宽**：数字、代码、CAS/PDB ID 等用 `font-mono`，便于扫读。
+- **无衬线**：Geist Sans（`geist/font/sans`），全站界面与正文，保证各平台一致与品牌感。
+- **等宽**：Geist Mono（`geist/font/mono`），数字、代码、CAS/PDB ID、序列等用 `font-mono`，便于扫读。
 - **层级**：
   - 页面主标题：`text-3xl font-bold`，白色。
   - 区块标题：`text-lg–2xl font-semibold`。

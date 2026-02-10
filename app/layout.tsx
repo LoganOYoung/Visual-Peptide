@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ThemeByRoute } from "@/components/ThemeByRoute";
 import { getBaseUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -81,8 +84,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="bg-slate-50 text-slate-900">
-      <body className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 text-slate-900 antialiased">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className="flex min-h-screen flex-col overflow-x-hidden font-sans antialiased [background-color:var(--bg)] [color:var(--text)]">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var p=document.location.pathname;var d=p==='/'||p.startsWith('/structure')||p.startsWith('/tools')||p.startsWith('/verify')||p.startsWith('/peptides');document.body.dataset.theme=d?'dark':'light';})();`,
+          }}
+        />
+        <ThemeByRoute />
         {GA_ID && (
           <>
             <Script

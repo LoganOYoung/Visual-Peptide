@@ -38,9 +38,9 @@ export function Header() {
   }, [clearCloseTimer]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur pt-[env(safe-area-inset-top,0)]">
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--card)]/95 backdrop-blur pt-[env(safe-area-inset-top,0)]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold text-slate-900">
+        <Link href="/" className="flex items-center gap-2 font-semibold text-[var(--text)]">
           <img src="/logo.svg" alt="" className="h-8 w-8 shrink-0" width={32} height={32} />
           Visual Peptide
         </Link>
@@ -61,8 +61,8 @@ export function Header() {
                 >
                   <Link
                     href={link.href}
-                    className={`rounded-none px-3 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white inline-flex items-center gap-1 ${
-                      isActive ? "bg-teal-50 text-teal-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    className={`rounded-none px-3 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ring-offset)] inline-flex items-center gap-1 ${
+                      isActive ? "bg-[var(--accent)]/10 text-[var(--link)]" : "text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]"
                     }`}
                   >
                     {link.label}
@@ -72,7 +72,7 @@ export function Header() {
                   </Link>
                   {openDropdown === link.href && (
                     <ul
-                      className="absolute left-0 top-full mt-0.5 min-w-[180px] rounded-none border border-slate-200 bg-white py-1 shadow-lg"
+                      className="absolute left-0 top-full mt-0.5 min-w-[180px] rounded-none border border-[var(--border)] bg-[var(--card)] py-1 shadow-lg"
                       onMouseEnter={() => openAndCancelClose(link.href)}
                       onMouseLeave={scheduleClose}
                     >
@@ -83,7 +83,7 @@ export function Header() {
                               href={s.href}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                              className="block px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--bg)] hover:text-[var(--text)]"
                               onClick={() => setOpenDropdown(null)}
                             >
                               {s.label}
@@ -91,7 +91,7 @@ export function Header() {
                           ) : (
                             <Link
                               href={s.href}
-                              className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                              className="block px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--bg)] hover:text-[var(--text)]"
                               onClick={() => setOpenDropdown(null)}
                             >
                               {s.label}
@@ -108,9 +108,9 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-none px-3 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
-                  isActive ? "bg-teal-50 text-teal-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
+className={`rounded-none px-3 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ring-offset)] ${
+                isActive ? "bg-[var(--accent)]/10 text-[var(--link)]" : "text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]"
+              }`}
               >
                 {link.label}
               </Link>
@@ -122,7 +122,7 @@ export function Header() {
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((o) => !o)}
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-none text-slate-600 hover:bg-slate-100 hover:text-slate-900 md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-none text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)] md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ring-offset)]"
         >
           {mobileOpen ? (
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -136,7 +136,7 @@ export function Header() {
         </button>
       </div>
       {mobileOpen && (
-        <nav className="border-t border-slate-200 bg-white md:hidden" aria-label="Mobile menu">
+        <nav className="border-t border-[var(--border)] bg-[var(--card)] md:hidden" aria-label="Mobile menu">
           <ul className="mx-auto max-w-6xl space-y-1 px-4 py-3">
             {headerLinks.map((link) => {
               const sub = DROPDOWN_LINKS[link.href];
@@ -150,13 +150,13 @@ export function Header() {
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className={`flex min-h-[44px] items-center rounded-none px-3 py-3 text-sm font-medium transition ${
-                      isActive ? "bg-teal-50 text-teal-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      isActive ? "bg-[var(--accent)]/10 text-[var(--link)]" : "text-[var(--text-muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]"
                     }`}
                   >
                     {link.label}
                   </Link>
                   {sub && sub.length > 0 && (
-                    <ul className="ml-4 mt-1 space-y-0.5 border-l border-slate-200 pl-3">
+                    <ul className="ml-4 mt-1 space-y-0.5 border-l border-[var(--border)] pl-3">
                       {sub.map((s) => (
                         <li key={s.href}>
                           {s.href.startsWith("http") ? (
@@ -165,7 +165,7 @@ export function Header() {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={() => setMobileOpen(false)}
-                              className="flex min-h-[44px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
+                              className="flex min-h-[44px] items-center py-2 text-sm text-[var(--text-muted)] hover:text-[var(--link)]"
                             >
                               {s.label}
                             </a>
@@ -173,7 +173,7 @@ export function Header() {
                             <Link
                               href={s.href}
                               onClick={() => setMobileOpen(false)}
-                              className="flex min-h-[44px] items-center py-2 text-sm text-slate-600 hover:text-teal-600"
+                              className="flex min-h-[44px] items-center py-2 text-sm text-[var(--text-muted)] hover:text-[var(--link)]"
                             >
                               {s.label}
                             </Link>

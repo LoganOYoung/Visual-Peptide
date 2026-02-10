@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ["geist"],
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {
