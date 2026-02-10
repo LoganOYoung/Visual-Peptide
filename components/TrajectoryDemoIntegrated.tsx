@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { TrajectoryViewer } from "./TrajectoryViewer";
 import { starReactionDemos, getStarReactionByPeptide } from "@/lib/starReactionDemos";
@@ -63,6 +64,60 @@ export function TrajectoryDemoIntegrated() {
     if (state && "pdbUrl" in state) u.searchParams.set("pdbUrl", state.pdbUrl);
     window.history.replaceState({}, "", u.toString());
   }, []);
+
+  const updateViewerStateUrl = useCallback((frame: number, playing: boolean, speed: number, view?: number[]) => {
+    if (typeof window === "undefined") return;
+    const u = new URL(window.location.href);
+    u.searchParams.set("frame", String(frame));
+    u.searchParams.set("play", playing ? "1" : "0");
+    u.searchParams.set("speed", String(speed));
+    if (view && view.length >= 8) {
+      try {
+        const raw = btoa(JSON.stringify(view)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        u.searchParams.set("view", raw);
+      } catch {
+        // leave existing view param
+      }
+    }
+    window.history.replaceState({}, "", u.toString());
+  }, []);
+
+  const parseViewFromUrl = useCallback((viewParam: string | null): number[] | undefined => {
+    if (!viewParam || typeof viewParam !== "string") return undefined;
+    try {
+      const padded = viewParam.replace(/-/g, "+").replace(/_/g, "/");
+      const pad = padded.length % 4;
+      const b64 = pad === 0 ? padded : padded + "=".repeat(4 - pad);
+      const json = atob(b64);
+      const arr = JSON.parse(json) as unknown;
+      if (Array.isArray(arr) && arr.length >= 8 && arr.every((x) => typeof x === "number")) return arr as number[];
+    } catch {
+      // ignore
+    }
+    return undefined;
+  }, []);
+
+  const viewParam = searchParams.get("view");
+  const initialView = useMemo(() => parseViewFromUrl(viewParam), [viewParam, parseViewFromUrl]);
+
+  const handleViewerStateChange = useCallback(
+    (frame: number, playing: boolean, speed: number) => {
+      updateViewerStateUrl(frame, playing, speed);
+    },
+    [updateViewerStateUrl]
+  );
+
+  const handleViewChange = useCallback(
+    (view: number[]) => {
+      if (typeof window === "undefined") return;
+      const u = new URL(window.location.href);
+      const frame = parseInt(u.searchParams.get("frame") ?? "0", 10) || 0;
+      const play = u.searchParams.get("play") !== "0";
+      const speed = parseFloat(u.searchParams.get("speed") ?? "1") || 1;
+      updateViewerStateUrl(frame, play, speed, view);
+    },
+    [updateViewerStateUrl]
+  );
 
   useEffect(() => {
     const pdbIds = searchParams.get("pdbIds")?.trim();
@@ -410,7 +465,11 @@ export function TrajectoryDemoIntegrated() {
                 title=""
                 minHeight={420}
                 intervalMs={900}
-                autoPlay={true}
+                autoPlay={searchParams.get("play") !== "0"}
+                initialFrame={Math.max(0, parseInt(searchParams.get("frame") ?? "0", 10) || 0)}
+                initialView={initialView}
+                onStateChange={handleViewerStateChange}
+                onViewChange={handleViewChange}
                 className="border-0 bg-slate-900"
               />
             </div>
@@ -422,6 +481,14 @@ export function TrajectoryDemoIntegrated() {
               {running.caption && <p className="mt-2 text-xs text-slate-400">{running.caption}</p>}
               <p className="mt-4 text-xs text-slate-500">
                 Frames: {running.framePdbIds.join(" → ")}. Data from RCSB PDB. For research and education only.
+              </p>
+              <p className="mt-4">
+                <Link
+                  href="/verify"
+                  className="text-sm font-medium text-teal-400 underline underline-offset-2 hover:text-teal-300"
+                >
+                  Verify with Batch Report →
+                </Link>
               </p>
             </aside>
           </div>
@@ -445,8 +512,17 @@ export function TrajectoryDemoIntegrated() {
             }
             minHeight={480}
             intervalMs={800}
-            autoPlay={true}
+            autoPlay={searchParams.get("play") !== "0"}
+            initialFrame={Math.max(0, parseInt(searchParams.get("frame") ?? "0", 10) || 0)}
+            initialView={initialView}
+            onStateChange={handleViewerStateChange}
+            onViewChange={handleViewChange}
           />
+          <p className="mt-3 text-sm text-slate-600">
+            <Link href="/verify" className="link-inline font-medium">
+              Verify with Batch Report →
+            </Link>
+          </p>
         </div>
       )}
     </div>

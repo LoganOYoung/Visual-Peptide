@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const CDN_3DMOL_PRIMARY = "https://3Dmol.org/build/3Dmol-min.js";
 const CDN_3DMOL_FALLBACK = "https://cdn.jsdelivr.net/npm/3dmol@2.5.4/build/3Dmol-min.js";
@@ -20,6 +20,9 @@ type ViewerInstance = {
   clear?: () => void;
   destroy?: () => void;
   pngURI?: () => string;
+  setBackgroundColor?: (hex: number) => void;
+  getView?: () => number[];
+  setView?: (view: number[]) => void;
 };
 
 type ThreeDmolLib = { createViewer: (el: HTMLElement, config?: { backgroundColor?: string }) => ViewerInstance };
@@ -37,6 +40,14 @@ interface TrajectoryViewerProps {
   intervalMs?: number;
   /** Start playing automatically. */
   autoPlay?: boolean;
+  /** Initial frame index (e.g. from URL state). Applied after load. */
+  initialFrame?: number;
+  /** Initial camera view (e.g. from URL state). Array from getView(). Applied after load. */
+  initialView?: number[];
+  /** Called when frame, playing, or speed changes (for URL state sync). */
+  onStateChange?: (frame: number, playing: boolean, speed: number) => void;
+  /** Called when camera view changes (for URL state sync). Debounced. */
+  onViewChange?: (view: number[]) => void;
   className?: string;
 }
 
@@ -65,6 +76,10 @@ export function TrajectoryViewer({
   minHeight = 480,
   intervalMs = 600,
   autoPlay = true,
+  initialFrame,
+  initialView,
+  onStateChange,
+  onViewChange,
   className = "",
 }: TrajectoryViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -177,7 +192,28 @@ export function TrajectoryViewer({
           viewer.zoomTo();
           viewer.render();
           setTotalFrames(numF);
-          setFrame(0);
+          const startFrame = Math.max(0, Math.min(numF - 1, typeof initialFrame === "number" && Number.isFinite(initialFrame) ? initialFrame : 0));
+          setFrame(startFrame);
+          if (startFrame > 0) {
+            if (typeof viewer.setFrame === "function") {
+              viewer.setFrame(startFrame);
+              viewer.render?.();
+            } else if (animationModeRef.current === "manual") {
+              currentFrameIndexRef.current = startFrame;
+              viewer.clear?.();
+              viewer.addModel(frameTexts[startFrame], "pdb");
+              viewer.setStyle({}, { stick: {}, cartoon: { color: "spectrum" } });
+              viewer.render();
+            }
+          }
+          if (initialView && Array.isArray(initialView) && initialView.length >= 8 && typeof viewer.setView === "function") {
+            try {
+              viewer.setView(initialView);
+              viewer.render?.();
+            } catch {
+              // ignore invalid view
+            }
+          }
           setLoaded(true);
 
           const baseMs = intervalMsRef.current;
@@ -186,7 +222,7 @@ export function TrajectoryViewer({
             viewer.animate({ loop: "forward", reps: 0, interval: effectiveMs });
             setPlaying(true);
           } else if (numF > 1 && animationModeRef.current === "manual" && frameTexts.length > 1) {
-            currentFrameIndexRef.current = 0;
+            currentFrameIndexRef.current = startFrame;
             frameIntervalRef.current = setInterval(() => {
               if (cancelled || !viewerRef.current) return;
               const textsNow = frameTextsRef.current;
@@ -262,6 +298,29 @@ export function TrajectoryViewer({
     }, 200);
     return () => clearInterval(t);
   }, [playing, totalFrames]);
+
+  // Notify parent for URL state sync
+  useEffect(() => {
+    if (onStateChange && loaded) onStateChange(frame, playing, speed);
+  }, [frame, playing, speed, loaded, onStateChange]);
+
+  // Poll view and notify parent (debounced) for URL state sync
+  useEffect(() => {
+    if (!onViewChange || !loaded) return;
+    const v = viewerRef.current;
+    if (!v?.getView) return;
+    let lastViewStr = "";
+    const t = setInterval(() => {
+      const view = v.getView?.();
+      if (!view || view.length < 8) return;
+      const str = JSON.stringify(view);
+      if (str !== lastViewStr) {
+        lastViewStr = str;
+        onViewChange(view);
+      }
+    }, 1500);
+    return () => clearInterval(t);
+  }, [loaded, onViewChange]);
 
   const handlePlayPause = () => {
     const v = viewerRef.current;
@@ -350,7 +409,45 @@ export function TrajectoryViewer({
     }
   };
 
-  const handleFrameSelect = (i: number) => {
+  const handleExportPngTransparent = () => {
+    const v = viewerRef.current;
+    if (!v?.pngURI) return;
+    try {
+      if (typeof v.setBackgroundColor === "function") {
+        v.setBackgroundColor(0x00000000);
+        v.render?.();
+      }
+      const dataUrl = v.pngURI();
+      if (typeof v.setBackgroundColor === "function") {
+        v.setBackgroundColor(0x1e293b);
+        v.render?.();
+      }
+      if (!dataUrl) return;
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `trajectory-frame-${frame + 1}-transparent.png`;
+      a.click();
+    } catch {
+      if (typeof viewerRef.current?.setBackgroundColor === "function") {
+        viewerRef.current.setBackgroundColor(0x1e293b);
+        viewerRef.current.render?.();
+      }
+    }
+  };
+
+  const handleDownloadCurrentFramePdb = () => {
+    const texts = frameTextsRef.current;
+    if (frame < 0 || frame >= texts.length) return;
+    const pdb = texts[frame];
+    const blob = new Blob([pdb], { type: "chemical/x-pdb" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `frame-${frame + 1}.pdb`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const handleFrameSelect = useCallback((i: number) => {
     const v = viewerRef.current;
     if (!v) return;
     if (typeof v.setFrame === "function") {
@@ -368,7 +465,98 @@ export function TrajectoryViewer({
         setFrame(i);
       }
     }
+  }, []);
+
+  const handleTimelineInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const i = Number(e.target.value);
+    if (!Number.isFinite(i)) return;
+    setPlaying(false);
+    if (viewerRef.current?.pauseAnimate) viewerRef.current.pauseAnimate();
+    if (frameIntervalRef.current) {
+      clearInterval(frameIntervalRef.current);
+      frameIntervalRef.current = null;
+    }
+    handleFrameSelect(Math.max(0, Math.min(totalFrames - 1, i)));
   };
+
+  const [exportingGif, setExportingGif] = useState(false);
+  const handleExportGif = useCallback(async () => {
+    const v = viewerRef.current;
+    if (!v?.pngURI || totalFrames <= 0) return;
+    const numFrames = Math.min(totalFrames, 20);
+    const frameToRestore = frame;
+    setExportingGif(true);
+    try {
+      const { GIFEncoder, quantize, applyPalette } = await import("gifenc");
+      const gif = GIFEncoder();
+      let width = 0;
+      let height = 0;
+      const delayCentisec = 8; // ~12 fps
+
+      for (let i = 0; i < numFrames; i++) {
+        handleFrameSelect(i);
+        await new Promise((r) => requestAnimationFrame(r));
+        await new Promise((r) => setTimeout(r, 50));
+        const dataUrl = v.pngURI?.();
+        if (!dataUrl) continue;
+        const img = await new Promise<HTMLImageElement>((res, rej) => {
+          const im = new Image();
+          im.onload = () => res(im);
+          im.onerror = rej;
+          im.src = dataUrl;
+        });
+        const c = document.createElement("canvas");
+        c.width = width = img.naturalWidth;
+        c.height = height = img.naturalHeight;
+        const ctx = c.getContext("2d");
+        if (!ctx) continue;
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const palette = quantize(imageData.data, 256);
+        const index = applyPalette(imageData.data, palette);
+        gif.writeFrame(index, width, height, { palette, delay: delayCentisec });
+      }
+
+      gif.finish();
+      const bytes = gif.bytes();
+      const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+      const blob = new Blob([buffer], { type: "image/gif" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "trajectory.gif";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      handleFrameSelect(frameToRestore);
+    } finally {
+      setExportingGif(false);
+    }
+  }, [totalFrames, frame, handleFrameSelect]);
+
+  // Apply initialFrame when prop changes (e.g. URL back/forward)
+  useEffect(() => {
+    if (!loaded || totalFrames <= 0 || typeof initialFrame !== "number" || !Number.isFinite(initialFrame)) return;
+    const i = Math.max(0, Math.min(totalFrames - 1, initialFrame));
+    if (i === frame) return;
+    handleFrameSelect(i);
+  }, [initialFrame, loaded, totalFrames, frame, handleFrameSelect]);
+
+  // Apply initialView when prop changes (e.g. URL back/forward). Skip if already close to avoid sync loop.
+  useEffect(() => {
+    if (!loaded || !initialView || !Array.isArray(initialView) || initialView.length < 8) return;
+    const v = viewerRef.current;
+    if (typeof v?.setView !== "function" || typeof v?.getView !== "function") return;
+    try {
+      const current = v.getView();
+      if (current && current.length >= 8) {
+        const maxDiff = Math.max(...initialView.map((x, i) => Math.abs((current[i] ?? 0) - x)));
+        if (maxDiff < 0.02) return; // already in sync
+      }
+      v.setView(initialView);
+      v.render?.();
+    } catch {
+      // ignore
+    }
+  }, [initialView, loaded]);
 
   return (
     <div
@@ -422,6 +610,35 @@ export function TrajectoryViewer({
               >
                 Screenshot
               </button>
+              <button
+                type="button"
+                onClick={handleExportPngTransparent}
+                className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-600"
+                title="Download PNG with transparent background"
+              >
+                PNG (transparent)
+              </button>
+              {totalFrames > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDownloadCurrentFramePdb}
+                  className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-600"
+                  title="Download current frame as PDB"
+                >
+                  Current frame PDB
+                </button>
+              )}
+              {totalFrames > 1 && (
+                <button
+                  type="button"
+                  onClick={handleExportGif}
+                  disabled={exportingGif}
+                  className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-600 disabled:opacity-50"
+                  title="Export first 20 frames as GIF"
+                >
+                  {exportingGif ? "Exporting…" : "Export GIF"}
+                </button>
+              )}
             </>
           )}
         </div>
@@ -456,6 +673,22 @@ export function TrajectoryViewer({
           />
         </div>
       </div>
+      {loaded && totalFrames > 1 && (
+        <div className="flex flex-nowrap items-center gap-3 border-t border-slate-600 bg-slate-800 px-4 py-2">
+          <input
+            type="range"
+            min={0}
+            max={Math.max(0, totalFrames - 1)}
+            value={frame}
+            onChange={handleTimelineInput}
+            className="h-2 flex-1 min-w-0 accent-teal-500"
+            aria-label="Seek to frame"
+          />
+          <span className="text-xs text-slate-400 shrink-0 tabular-nums">
+            {frame + 1} / {totalFrames}
+          </span>
+        </div>
+      )}
       {loaded && totalFrames > 1 && totalFrames <= 20 && (
         <div className="flex flex-wrap gap-1 border-t border-slate-600 bg-slate-800 px-4 py-2">
           {Array.from({ length: totalFrames }, (_, i) => (

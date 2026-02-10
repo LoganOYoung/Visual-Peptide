@@ -24,6 +24,12 @@
 | 播放速度调节 | ✅ 已有 | 0.5× / 1× / 1.5× / 2×，切换后立即生效 |
 | 全屏模式 | ✅ 已有 | 工具栏「Fullscreen」，便于讲解、录屏 |
 | 导出截图 | ✅ 已有 | 工具栏「Screenshot」，下载当前视角 PNG |
+| 导出透明 PNG | ✅ 已有 | 工具栏「PNG (transparent)」，尝试透明背景导出（依赖 3Dmol 支持） |
+| 当前帧 PDB 下载 | ✅ 已有 | 工具栏「Current frame PDB」，下载当前帧的 PDB 文件 |
+| 导出 GIF | ✅ 已有 | 工具栏「Export GIF」，将前 20 帧导出为 GIF 动画 |
+| 可拖拽时间轴 | ✅ 已有 | 多帧时显示进度条，拖拽即跳帧（并暂停），类似视频进度条 |
+| 状态联动 URL | ✅ 已有 | URL 带 `frame` / `play` / `speed` / `view`，分享即所见（同帧同视角） |
+| Verify with Batch Report | ✅ 已有 | Lab 侧栏与 Custom 视窗下方入口，链到 /verify |
 | 分享链接 | ✅ 已有 | 自定义加载后「Copy share link」；URL 带 `?pdbIds=...` 或 `?pdbUrl=...` 可直开 |
 | 关键帧插值 (Morphing) | ✅ 已有 | 选「Morph (A→B)」，输入两个 PDB ID，前端线性插值生成多帧并播放 |
 | 预渲染视频 (Hero) | ✅ 已有 | 首页「3D reaction demo」区块：可放 `public/videos/reaction-hero.mp4`，无则显示 CTA 链到 /structure/demo |
@@ -33,6 +39,52 @@
 - 数据在 `lib/starReactionDemos.ts`，可扩展 3–5 个核心产品。不做开放搜索，仅查表播放预设结果。
 
 **核心必备**：多帧播放、播放/暂停、自定义输入（PDB IDs + 文件 URL）、预设 demo、明星反应演示、从 3D Structure 可进入。以上为已实现增强项。
+
+---
+
+## 用户能力说明（用 viewer 能做什么）
+
+用户打开 **3D reaction demo** 页（`/structure/demo`）后，可以完成以下操作。
+
+### 1. 观看轨迹
+
+- **选来源**：Preset（明星肽–受体）、By PDB IDs、By file URL、Morph (A→B)。
+- **加载**：点「Run simulation」或「Load trajectory」后，在页面内看到多帧 3D 结构。
+- **播放**：Play / Pause、调节速度（0.5×～2×）、查看「Frame x / N」。
+
+### 2. 像视频一样拖进度（Docking 回放）
+
+- **时间轴**：多帧时有一条可拖拽进度条，拖到某一帧即跳转并暂停。
+- **帧按钮**：≤20 帧时底部有 1、2、3… 按钮，点数字即可跳帧。
+- 适合：停在某一帧细看「多肽进受体」的中间态，或前后对比。
+
+### 3. 分享「当前状态」的链接（状态联动 URL）
+
+- **自动写入 URL**：当前帧、是否播放、速度、**相机视角**会写入地址栏（`?frame=...&play=...&speed=...&view=...`）。
+- **分享即所见**：复制链接给他人或自己新开标签，打开后为**同一帧、同一视角**。
+- 适合：写报告、做 PPT、与同事对齐「你看的就是这一帧、这个角度」。
+
+### 4. 导出与数据
+
+- **Screenshot**：当前画面 PNG（带背景）。
+- **PNG (transparent)**：当前画面 PNG，尽量透明背景。
+- **Current frame PDB**：下载**当前帧**的 PDB，便于在 PyMOL / Chimera 等中继续使用。
+- **Export GIF**：将前 20 帧导出为 GIF 动画，便于放入 PPT 或文档。
+
+### 5. 与验证/其它工具衔接
+
+- **Verify with Batch Report**：在 Preset Lab 侧栏和 Custom 视窗下方均有入口，跳转至 `/verify`，可结合批次报告验证纯度等。
+
+### 小结（用户能做什么）
+
+| 用户目标       | 在 viewer 里能做的 |
+|----------------|--------------------|
+| 看结合过程     | 选 Preset 或自己的 PDB/URL/Morph，播放多帧轨迹。 |
+| 停在某一帧细看 | 拖时间条或点帧号，旋转/缩放后导出 PNG 或透明 PNG。 |
+| 把某一帧拿去用 | 下载「Current frame PDB」或截屏。 |
+| 做动画/汇报    | 导出 GIF 或截图，复制状态链接放进 PPT/报告。 |
+| 分享精确视角   | 旋转好视角后复制链接，他人打开即同帧同视角。 |
+| 与纯度/批次挂钩 | 通过「Verify with Batch Report」跳转验证页。 |
 
 ---
 
@@ -71,6 +123,7 @@
 | `public/trajectories/` | 可放置多 MODEL PDB 文件，如 `demo.pdb` |
 | `app/structure/demo/page.tsx` | 演示页路由 |
 | `app/structure/page.tsx` | 单帧 3D 页，含「3D reaction demo」入口 |
+| `components/TrajectoryDemoIntegrated.tsx` | 集成加载器：Preset / PDB IDs / URL / Morph，状态 URL（frame/view）与 Verify 入口 |
 | `components/TrajectoryDemoCustomLoader.tsx` | 自定义加载：PDB IDs / URL / Morph，分享链接与 URL 同步 |
 | `components/HeroReactionVideo.tsx` | 首页 3D 反应区块：可选视频 + CTA |
 | `lib/morphPdb.ts` | 两 PDB 线性插值生成多帧（Morph A→B） |
