@@ -671,6 +671,11 @@ export function TrajectoryViewer({
             style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}
             aria-hidden
           />
+          <div
+            className="viewer-flow-lines absolute inset-0 z-[1]"
+            style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}
+            aria-hidden
+          />
         </div>
       </div>
       {loaded && totalFrames > 1 && (
