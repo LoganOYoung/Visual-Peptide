@@ -8,13 +8,10 @@ export type StructureAlternative = {
   reason: string;
 };
 
-/** PDB ID → list of alternative structures with short guidance */
+/** PDB ID → list of alternative structures with short guidance. IDs must match actual RCSB entries. */
 const ALTERNATIVES: Record<string, StructureAlternative[]> = {
-  "6XBM": [
-    { pdbId: "7F9W", label: "GLP-1 receptor complex", reason: "See receptor-side binding and full complex." },
-  ],
-  "7F9W": [
-    { pdbId: "6XBM", label: "Semaglutide (GLP-1) in complex", reason: "Focus on peptide and modification sites." },
+  "7KI0": [
+    { pdbId: "6X18", label: "GLP-1 peptide–receptor", reason: "Native GLP-1 bound to GLP-1R; compare with Semaglutide." },
   ],
 };
 

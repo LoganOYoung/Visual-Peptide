@@ -48,7 +48,7 @@ export const peptides: Peptide[] = [
     typicalDoseMcg: "250–500 (research); clinical doses vary",
     frequency: "Weekly (clinical) or as protocol",
     reconNotes: "Reconstitute with BAC water. Store refrigerated. Use within protocol-defined period.",
-    pdbId: "6XBM",
+    pdbId: "7KI0",
     cas: "910463-68-2",
     category: "metabolic",
     molecularWeight: 4113,

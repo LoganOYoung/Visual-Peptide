@@ -34,12 +34,14 @@ export function generateMetadata({
 }
 
 /** Default structure shown when no ?pdb= is in the URL (demo). */
-const DEFAULT_DEMO_PDB = "6XBM";
+const DEFAULT_DEMO_PDB = "7KI0";
 const DEFAULT_DEMO_LABEL = "Semaglutide (GLP-1)";
 
-/** Extra PDB IDs for testing 3D viewer (small/fast or peptide-related). */
+/** Extra PDB IDs for testing 3D viewer (small/fast or peptide-related). Labels must match RCSB entry. */
 const TEST_PDB_IDS: { id: string; label: string }[] = [
-  { id: "6XBM", label: "Semaglutide (GLP-1)" },
+  { id: "7KI0", label: "Semaglutide (GLP-1)" },
+  { id: "6XBM", label: "SMO-Gi complex" },
+  { id: "7F9W", label: "Anti-CD25 antibodies" },
   { id: "1CRN", label: "Crambin (small protein)" },
   { id: "1UBQ", label: "Ubiquitin" },
   { id: "4N8T", label: "Membrane protein" },
@@ -50,7 +52,6 @@ const TEST_PDB_IDS: { id: string; label: string }[] = [
   { id: "4DLN", label: "Protein (4DLN)" },
   { id: "5IRE", label: "Insulin receptor" },
   { id: "1D4P", label: "Small peptide" },
-  { id: "7F9W", label: "GLP-1 receptor" },
 ];
 
 export default function StructurePage({
