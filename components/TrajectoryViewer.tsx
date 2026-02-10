@@ -140,7 +140,7 @@ export function TrajectoryViewer({
           }
           let viewer: ViewerInstance;
           try {
-            viewer = $3Dmol.createViewer(el, { backgroundColor: "0xf1f5f9" });
+            viewer = $3Dmol.createViewer(el, { backgroundColor: "0x1e293b" });
           } catch (e) {
             setError("Failed to create viewer");
             return;
@@ -373,28 +373,28 @@ export function TrajectoryViewer({
   return (
     <div
       data-viewer="trajectory"
-      className={`overflow-hidden rounded-none border-2 border-slate-200 bg-slate-100 isolate ${className}`}
+      className={`overflow-hidden rounded-none border border-slate-600 bg-slate-800 isolate ${className}`}
       style={{ contain: "layout" }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 py-2">
-        <span className="text-sm font-medium text-slate-700">{title}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-600 bg-slate-800 px-4 py-2">
+        <span className="text-sm font-medium text-slate-100">{title}</span>
         <div className="flex flex-wrap items-center gap-2">
           {totalFrames > 1 && (
             <>
               <button
                 type="button"
                 onClick={handlePlayPause}
-                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-600"
               >
                 {playing ? "Pause" : "Play"}
               </button>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-400">
                 Frame {frame + 1} / {totalFrames}
               </span>
               <select
                 value={speed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
-                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:outline-none"
+                className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-200 focus:border-teal-500 focus:outline-none"
                 title="Playback speed"
               >
                 <option value={0.5}>0.5×</option>
@@ -409,7 +409,7 @@ export function TrajectoryViewer({
               <button
                 type="button"
                 onClick={handleFullscreen}
-                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-600"
                 title="Fullscreen"
               >
                 {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
@@ -417,7 +417,7 @@ export function TrajectoryViewer({
               <button
                 type="button"
                 onClick={handleScreenshot}
-                className="min-h-[44px] rounded-none border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="min-h-[44px] rounded-none border border-slate-600 bg-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-600"
                 title="Download screenshot"
               >
                 Screenshot
@@ -426,10 +426,10 @@ export function TrajectoryViewer({
           )}
         </div>
       </div>
-      <div ref={wrapperRef} className="relative w-full" style={{ minHeight: `${minHeight}px` }}>
+      <div ref={wrapperRef} className="relative w-full bg-slate-900" style={{ minHeight: `${minHeight}px` }}>
         {!loaded && !error && (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-600 z-10"
+            className="absolute inset-0 flex items-center justify-center bg-slate-900/95 text-slate-300 z-10"
             style={{ minHeight: `${minHeight}px` }}
           >
             <span className="animate-pulse">Loading trajectory…</span>
@@ -437,20 +437,27 @@ export function TrajectoryViewer({
         )}
         {error && (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-amber-700 text-sm px-4 z-10"
+            className="absolute inset-0 flex items-center justify-center bg-slate-900/95 text-amber-300 text-sm px-4 z-10"
             style={{ minHeight: `${minHeight}px` }}
           >
             {error}
           </div>
         )}
-        <div
-          ref={containerRef}
-          className="w-full bg-slate-100"
-          style={{ width: "100%", height: `${minHeight}px`, minHeight: `${minHeight}px` }}
-        />
+        <div className="relative w-full" style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}>
+          <div
+            ref={containerRef}
+            className="absolute inset-0 w-full bg-slate-900"
+            style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}
+          />
+          <div
+            className="viewer-grid-scan absolute inset-0 z-[1]"
+            style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}
+            aria-hidden
+          />
+        </div>
       </div>
       {loaded && totalFrames > 1 && totalFrames <= 20 && (
-        <div className="flex flex-wrap gap-1 border-t border-slate-200 bg-white px-4 py-2">
+        <div className="flex flex-wrap gap-1 border-t border-slate-600 bg-slate-800 px-4 py-2">
           {Array.from({ length: totalFrames }, (_, i) => (
             <button
               key={i}
@@ -458,8 +465,8 @@ export function TrajectoryViewer({
               onClick={() => handleFrameSelect(i)}
               className={`h-7 min-w-[2rem] rounded-none px-2 text-xs font-medium transition ${
                 frame === i
-                  ? "bg-teal-600 text-white"
-                  : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                  ? "bg-slate-100 text-slate-900"
+                  : "bg-slate-600 text-slate-200 hover:bg-slate-500"
               }`}
             >
               {i + 1}
